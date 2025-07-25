@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { AlertTriangle, Navigation, Plus } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-import { google } from "google-maps"
+// Remove this line. The 'google' object is available globally after loading the Google Maps JS API in your HTML.
 
 interface MapContainerProps {
   selectedTrail: any
