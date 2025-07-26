@@ -67,13 +67,13 @@ export function MapContainer({ selectedTrail, userLocation, onHazardReport }: Ma
   ]
 
   useEffect(() => {
-    if (!mapRef.current) return
+    if (typeof window === "undefined" || !window.google || !window.google.maps || !mapRef.current) return;
 
     // Initialize Google Map
-    const googleMap = new google.maps.Map(mapRef.current, {
+    const googleMap = new window.google.maps.Map(mapRef.current, {
       center: { lat: 18.5204, lng: 73.8567 }, // Pune coordinates
       zoom: 11,
-      mapTypeId: google.maps.MapTypeId.TERRAIN,
+      mapTypeId: window.google.maps.MapTypeId.TERRAIN,
       styles: [
         {
           featureType: "poi",
@@ -81,9 +81,9 @@ export function MapContainer({ selectedTrail, userLocation, onHazardReport }: Ma
           stylers: [{ visibility: "off" }],
         },
       ],
-    })
+    });
 
-    setMap(googleMap)
+    setMap(googleMap);
 
     // Add click listener for hazard reporting
     googleMap.addListener("click", (event: google.maps.MapMouseEvent) => {
@@ -91,16 +91,16 @@ export function MapContainer({ selectedTrail, userLocation, onHazardReport }: Ma
         const location = {
           lat: event.latLng.lat(),
           lng: event.latLng.lng(),
-        }
-        onHazardReport(location)
-        setIsReportMode(false)
+        };
+        onHazardReport(location);
+        setIsReportMode(false);
       }
-    })
+    });
 
     return () => {
-      // Cleanup
-    }
-  }, [isReportMode, onHazardReport])
+      // Cleanup if needed
+    };
+  }, [isReportMode, onHazardReport]);
 
   useEffect(() => {
     if (!map) return

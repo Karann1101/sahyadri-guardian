@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Cloud, CloudRain, Sun, Wind, Thermometer, Droplets } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -14,6 +14,11 @@ export function WeatherPanel() {
     rainfall: 2.5,
     visibility: 8,
   })
+
+  const [now, setNow] = useState<string | null>(null);
+  useEffect(() => {
+    setNow(new Date().toLocaleTimeString());
+  }, []);
 
   const getWeatherIcon = (condition: string) => {
     switch (condition) {
@@ -73,7 +78,7 @@ export function WeatherPanel() {
           </div>
         </div>
 
-        <div className="text-xs text-gray-500">Last updated: {new Date().toLocaleTimeString()}</div>
+        <div className="text-xs text-gray-500">Last updated: {now ? now : null}</div>
       </CardContent>
     </Card>
   )
