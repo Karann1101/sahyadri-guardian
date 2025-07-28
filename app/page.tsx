@@ -9,7 +9,7 @@ import { WeatherPanel } from "@/components/weather-panel"
 import { TrailSelector } from "@/components/trail-selector"
 import { useAuth } from "@/hooks/use-auth"
 import { useGeolocation } from "@/hooks/use-geolocation"
-import Signup from "@/components/signup"
+import AuthForm from "@/components/auth-form"
 import Advanced3DMap from "@/components/advanced-3d-map"
 
 const TRAILS = [
@@ -44,16 +44,30 @@ export default function HomePage() {
   const [showHazardModal, setShowHazardModal] = useState(false)
   const [hazardLocation, setHazardLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const { user } = useAuth()
+  const { user, loading, checkAuth } = useAuth()
   const { location, error: locationError } = useGeolocation()
 
-  // Show Signup if user not logged in
-  if (!user) {
+  const handleAuthSuccess = (userData: any) => {
+    // The useAuth hook will automatically update the user state
+    // This function is called after successful login/signup
+    checkAuth()
+  }
+
+  // Show loading spinner while checking authentication
+  if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-gray-50">
-        <Signup />
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
       </div>
     )
+  }
+
+  // Show AuthForm if user not logged in
+  if (!user) {
+    return <AuthForm onAuthSuccess={handleAuthSuccess} />
   }
 
   return (

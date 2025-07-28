@@ -6,7 +6,7 @@ interface User {
   id: string;
   displayName: string;
   email: string;
-  photoURL: string;
+  photoURL?: string;
 }
 
 export function useAuth() {
@@ -14,29 +14,59 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Simulate auth check
-    const checkAuth = async () => {
-      // In a real app, this would check Firebase Auth or similar
-      setTimeout(() => {
-        setUser({
-          id: "1",
-          displayName: "John Trekker",
-          email: "john@example.com",
-          photoURL: "/placeholder.svg?height=32&width=32",
-        })
-        setLoading(false)
-      }, 1000)
-    }
-
     checkAuth()
   }, [])
 
+  const checkAuth = async () => {
+    try {
+      const res = await fetch('/api/auth/me')
+      if (res.ok) {
+        const data = await res.json()
+        setUser({
+          id: data.user.id,
+          displayName: data.user.displayName,
+          email: data.user.email,
+          photoURL: "/placeholder-user.jpg"
+        })
+      } else {
+        setUser(null)
+      }
+    } catch (error) {
+      console.error('Auth check failed:', error)
+      setUser(null)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const signIn = async (email: string, password: string) => {
-    // Implement sign in logic
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    })
+
+    if (!res.ok) {
+      throw new Error('Login failed')
+    }
+
+    const data = await res.json()
+    setUser({
+      id: data.user.id,
+      displayName: data.user.displayName,
+      email: data.user.email,
+      photoURL: "/placeholder-user.jpg"
+    })
   }
 
   const signOut = async () => {
-    setUser(null)
+    try {
+      await fetch('/api/logout', { method: 'POST' })
+    } catch (error) {
+      console.error('Logout failed:', error)
+    } finally {
+      setUser(null)
+    }
   }
 
   return {
@@ -44,5 +74,6 @@ export function useAuth() {
     loading,
     signIn,
     signOut,
+    checkAuth
   }
 }

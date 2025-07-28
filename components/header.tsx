@@ -1,10 +1,11 @@
 "use client"
 
-import { Menu, Bell, User, Shield, MapPin } from "lucide-react"
+import { Menu, Bell, User, Shield, MapPin, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useAuth } from "@/hooks/use-auth"
 
 interface HeaderProps {
   onMenuClick: () => void
@@ -12,6 +13,12 @@ interface HeaderProps {
 }
 
 export function Header({ onMenuClick, user }: HeaderProps) {
+  const { signOut } = useAuth()
+
+  const handleSignOut = async () => {
+    await signOut()
+  }
+
   return (
     <header className="bg-white border-b border-gray-200 px-4 py-3">
       <div className="flex items-center justify-between">
@@ -39,7 +46,7 @@ export function Header({ onMenuClick, user }: HeaderProps) {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={user.photoURL || "/placeholder.svg"} alt={user.displayName} />
+                    <AvatarImage src={user.photoURL || "/placeholder-user.jpg"} alt={user.displayName} />
                     <AvatarFallback>{user.displayName?.charAt(0) || "U"}</AvatarFallback>
                   </Avatar>
                 </Button>
@@ -53,7 +60,10 @@ export function Header({ onMenuClick, user }: HeaderProps) {
                   <MapPin className="mr-2 h-4 w-4" />
                   My Reports
                 </DropdownMenuItem>
-                <DropdownMenuItem>Sign out</DropdownMenuItem>
+                <DropdownMenuItem onClick={handleSignOut}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sign out
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (

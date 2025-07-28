@@ -12,19 +12,19 @@ export async function POST(req: NextRequest) {
 
     await connectToDB();
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return NextResponse.json({ error: 'User already exists' }, { status: 400 });
+    const user = await User.findOne({ email });
+    if (!user) {
+      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    if (!isValidPassword) {
+      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+    }
 
-    const newUser = new User({ email, password: hashedPassword });
-    await newUser.save();
-
-    // Create JWT token for the new user
+    // Create JWT token
     const token = jwt.sign(
-      { userId: newUser._id, email: newUser.email },
+      { userId: user._id, email: user.email },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -32,14 +32,14 @@ export async function POST(req: NextRequest) {
     // Set HTTP-only cookie
     const response = NextResponse.json(
       { 
-        message: 'User registered successfully',
+        message: 'Login successful',
         user: {
-          id: newUser._id,
-          email: newUser.email,
-          displayName: newUser.displayName || newUser.email.split('@')[0]
+          id: user._id,
+          email: user.email,
+          displayName: user.displayName || user.email.split('@')[0]
         }
       },
-      { status: 201 }
+      { status: 200 }
     );
 
     response.cookies.set('auth-token', token, {
@@ -53,4 +53,4 @@ export async function POST(req: NextRequest) {
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
-}
+} 
