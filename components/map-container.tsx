@@ -123,25 +123,26 @@ export function MapContainer({ selectedTrail, userLocation, onHazardReport }: Ma
 
       polyline.setMap(map)
 
-      // Add risk level markers at trail start
+      // Add risk level markers at trail start with pulsing effect
       const riskMarker = new google.maps.Marker({
         position: trail.path[0],
         map: map,
         title: `${trail.name} - Risk: ${trail.riskLevel}`,
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
-          scale: 8,
+          scale: 12,
           fillColor: getRiskColor(trail.riskLevel),
           fillOpacity: 1,
-          strokeWeight: 2,
-          strokeColor: "#ffffff",
+          strokeWeight: 4,
+          strokeColor: "#fff",
         },
+        // No className, but we can use CSS to target marker images
       })
 
       newMarkers.push(riskMarker)
     })
 
-    // Add hazard markers
+    // Add hazard markers with pulsing effect
     hazards.forEach((hazard) => {
       const hazardMarker = new google.maps.Marker({
         position: { lat: hazard.lat, lng: hazard.lng },
@@ -149,11 +150,11 @@ export function MapContainer({ selectedTrail, userLocation, onHazardReport }: Ma
         title: hazard.description,
         icon: {
           path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
-          scale: 6,
+          scale: 10,
           fillColor: getSeverityColor(hazard.severity),
           fillOpacity: 1,
-          strokeWeight: 1,
-          strokeColor: "#000000",
+          strokeWeight: 2,
+          strokeColor: "#fff",
         },
       })
 
@@ -229,6 +230,19 @@ export function MapContainer({ selectedTrail, userLocation, onHazardReport }: Ma
   return (
     <div className="relative w-full h-full">
       <div ref={mapRef} className="w-full h-full" />
+      {/* Add CSS for marker pulse and glow */}
+      <style>{`
+        .gm-style .gm-style-mtc img[src*="circle"],
+        .gm-style img[src*="circle"],
+        .gm-style img[src*="backward_closed_arrow"] {
+          filter: drop-shadow(0 0 8px #ff00cc) drop-shadow(0 0 16px #fff);
+          animation: pulse-glow 1.5s infinite alternate;
+        }
+        @keyframes pulse-glow {
+          0% { filter: drop-shadow(0 0 8px #ff00cc) drop-shadow(0 0 16px #fff); }
+          100% { filter: drop-shadow(0 0 24px #ff00cc) drop-shadow(0 0 32px #fff); }
+        }
+      `}</style>
 
       {/* Map Controls */}
       <div className="absolute bottom-4 left-4 space-y-2">
