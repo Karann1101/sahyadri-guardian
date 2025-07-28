@@ -10,9 +10,16 @@ export const metadata: Metadata = {
   title: "Sahyadri Guardian - Trekking Safety Map",
   description: "Real-time safety map for trekkers in the Western Ghats around Pune",
   manifest: "/manifest.json",
-  themeColor: "#22c55e",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=1",
-    generator: 'v0.dev'
+  generator: 'v0.dev'
+  // themeColor and viewport moved to generateViewport below
+}
+
+// Funky, attractive theme color and viewport settings
+export function generateViewport() {
+  return {
+    themeColor: "#ff00cc", // Neon pink for a funky look
+    viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
+  };
 }
 
 export default function RootLayout({
@@ -28,9 +35,9 @@ export default function RootLayout({
           src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=geometry,places`}
         />
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#22c55e" />
+        {/* Removed <meta name="theme-color" ...> as it's now handled by generateViewport */}
       </head>
-      <body className={inter.className}>
+      <body className={inter.className} style={{ background: "linear-gradient(135deg, #ff00cc 0%, #333399 100%)" }}>
         {children}
         <Toaster />
       </body>

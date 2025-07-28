@@ -10,6 +10,7 @@ import { TrailSelector } from "@/components/trail-selector"
 import { useAuth } from "@/hooks/use-auth"
 import { useGeolocation } from "@/hooks/use-geolocation"
 import Signup from "@/components/signup"
+import Advanced3DMap from "@/components/advanced-3d-map"
 
 export default function HomePage() {
   const [selectedTrail, setSelectedTrail] = useState<string | null>(null)
@@ -28,6 +29,13 @@ export default function HomePage() {
     )
   }
 
+  // Coordinates for each trek
+  const TRAIL_COORDS: Record<string, { lat: number; lng: number }> = {
+    "Sinhagad Fort Trek": { lat: 18.3656639, lng: 73.7552694 },
+    "Rajgad Fort Trek": { lat: 18.2459862, lng: 73.6821929 },
+    "Torna Fort Trek": { lat: 18.2760722, lng: 73.6227167 },
+  }
+
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar
@@ -41,14 +49,18 @@ export default function HomePage() {
         <Header onMenuClick={() => setSidebarOpen(true)} user={user} />
 
         <div className="flex-1 relative">
-          <MapContainer
-            selectedTrail={selectedTrail}
-            userLocation={location ?? null}
-            onHazardReport={(loc) => {
-              setHazardLocation(loc)
-              setShowHazardModal(true)
-            }}
-          />
+          {selectedTrail && Object.prototype.hasOwnProperty.call(TRAIL_COORDS, selectedTrail) ? (
+            <Advanced3DMap center={TRAIL_COORDS[selectedTrail]} zoom={18} name={selectedTrail} />
+          ) : (
+            <MapContainer
+              selectedTrail={selectedTrail}
+              userLocation={location ?? null}
+              onHazardReport={(loc) => {
+                setHazardLocation(loc)
+                setShowHazardModal(true)
+              }}
+            />
+          )}
 
           <div className="absolute top-4 right-4 space-y-4">
             <WeatherPanel />
