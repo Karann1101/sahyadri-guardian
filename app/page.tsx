@@ -12,8 +12,35 @@ import { useGeolocation } from "@/hooks/use-geolocation"
 import Signup from "@/components/signup"
 import Advanced3DMap from "@/components/advanced-3d-map"
 
+const TRAILS = [
+  {
+    id: 1,
+    name: "Sinhagad Fort Trek",
+    coords: { lat: 18.365664, lng: 73.755269 }, // previous center, but Wikipedia: 18°21′56.39″N 73°45′18.97″E = 18.365664, 73.755269
+    riskLevel: "moderate",
+    aiRiskScore: 6.2,
+    // Wikipedia: 18°21′56.39″N 73°45′18.97″E => 18.365664, 73.755269
+  },
+  {
+    id: 2,
+    name: "Rajgad Fort Trek",
+    coords: { lat: 18.246111, lng: 73.682222 }, // Wikipedia: 18°14′46″N 73°40′56″E = 18.246111, 73.682222
+    riskLevel: "high",
+    aiRiskScore: 8.1,
+    // Wikipedia: 18°14′46″N 73°40′56″E => 18.246111, 73.682222
+  },
+  {
+    id: 3,
+    name: "Torna Fort Trek",
+    coords: { lat: 18.276072, lng: 73.622716 }, // previous center, but Wikipedia: 18°16′33.86″N 73°37′21.78″E = 18.276072, 73.622716
+    riskLevel: "low",
+    aiRiskScore: 3.4,
+    // Wikipedia: 18°16′33.86″N 73°37′21.78″E => 18.276072, 73.622716
+  },
+]
+
 export default function HomePage() {
-  const [selectedTrail, setSelectedTrail] = useState<string | null>(null)
+  const [selectedTrail, setSelectedTrail] = useState<any>(null)
   const [showHazardModal, setShowHazardModal] = useState(false)
   const [hazardLocation, setHazardLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -29,13 +56,6 @@ export default function HomePage() {
     )
   }
 
-  // Coordinates for each trek
-  const TRAIL_COORDS: Record<string, { lat: number; lng: number }> = {
-    "Sinhagad Fort Trek": { lat: 18.3656639, lng: 73.7552694 },
-    "Rajgad Fort Trek": { lat: 18.2459862, lng: 73.6821929 },
-    "Torna Fort Trek": { lat: 18.2760722, lng: 73.6227167 },
-  }
-
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar
@@ -49,8 +69,8 @@ export default function HomePage() {
         <Header onMenuClick={() => setSidebarOpen(true)} user={user} />
 
         <div className="flex-1 relative">
-          {selectedTrail && Object.prototype.hasOwnProperty.call(TRAIL_COORDS, selectedTrail) ? (
-            <Advanced3DMap center={TRAIL_COORDS[selectedTrail]} zoom={18} name={selectedTrail} />
+          {selectedTrail && selectedTrail.coords ? (
+            <Advanced3DMap center={selectedTrail.coords} zoom={18} name={selectedTrail.name} />
           ) : (
             <MapContainer
               selectedTrail={selectedTrail}

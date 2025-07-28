@@ -1,5 +1,10 @@
-import React, { useRef, useEffect } from "react";
-import { GoogleMap, useJsApiLoader, Polygon, Marker } from "@react-google-maps/api";
+'use client';
+
+import React, { useRef, useEffect, useState } from "react";
+import { GoogleMap, useJsApiLoader, Polygon, Marker, StreetViewPanorama } from "@react-google-maps/api";
+import { Button } from "@/components/ui/button";
+import { Eye, Map, ChevronLeft, ChevronRight } from "lucide-react";
+import { STREET_VIEW_POSITIONS, type StreetViewPosition } from "./street-view-positions";
 
 /**
  * Advanced3DMap component
@@ -70,101 +75,343 @@ const POLYGONS = {
   ],
 };
 
-const Advanced3DMap: React.FC<Props> = ({ center, zoom = 18, name }) => {
+// Utility to compute the centroid of a polygon
+function getPolygonCentroid(points: { lat: number; lng: number }[]): { lat: number; lng: number } {
+  let lat = 0, lng = 0;
+  for (const p of points) {
+    lat += p.lat;
+    lng += p.lng;
+  }
+  return { lat: lat / points.length, lng: lng / points.length };
+}
+
+export default function Advanced3DMap({ center, zoom = 18.5, name }: Props) {
   const mapRef = useRef<google.maps.Map | null>(null);
+  const panoramaRef = useRef<HTMLDivElement>(null);
+  const [viewMode, setViewMode] = useState<"map" | "street">("map");
+  const [isLoading, setIsLoading] = useState(false);
+  const [panorama, setPanorama] = useState<google.maps.StreetViewPanorama | null>(null);
+  const [currentViewIndex, setCurrentViewIndex] = useState(0);
+
+  // Get street view positions for current fort
+  const streetViewPositions = name ? STREET_VIEW_POSITIONS[name as keyof typeof STREET_VIEW_POSITIONS] : null;
+  const currentPosition = streetViewPositions?.[currentViewIndex];
+  
+  // Log for debugging
+  useEffect(() => {
+    if (viewMode === "street" && currentPosition) {
+      console.log("Current position:", currentPosition);
+      console.log("Panorama ID:", currentPosition.panoramaId);
+    }
+  }, [viewMode, currentPosition]);
 
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
-    libraries: ["webgl"],
+    libraries: ["places"],
   });
-
-  useEffect(() => {
-    if (!isLoaded || !mapRef.current) return;
-    // @ts-ignore
-    if (window.google && window.google.maps && window.google.maps.WebGLOverlayView) {
-      mapRef.current.setOptions({
-        tilt: 67.5,
-        heading: 0,
-        mapTypeId: "hybrid",
-      });
-    }
-  }, [isLoaded]);
-
-  if (!isLoaded) return <div>Loading 3D map...</div>;
 
   // Find the polygon for the selected fort (type-safe)
   const polygon = name && Object.prototype.hasOwnProperty.call(POLYGONS, name) ? POLYGONS[name as keyof typeof POLYGONS] : null;
 
-  return (
-    <GoogleMap
-      mapContainerStyle={containerStyle}
-      center={center}
-      zoom={zoom}
-      onLoad={map => (mapRef.current = map)}
-      options={{
-        tilt: 67.5,
-        heading: 0,
-        mapTypeId: "hybrid",
-        streetViewControl: false,
-        mapTypeControl: false,
-        fullscreenControl: true,
-        gestureHandling: "greedy",
-        tiltControl: true,
-        rotateControl: true,
-      }}
-    >
-      {polygon && (
-        <>
-          {/* Enhanced polygon with vibrant border and semi-transparent fill */}
-          <Polygon
-            path={polygon}
-            options={{
-              strokeColor: "#ff00cc",
-              strokeOpacity: 0.95,
-              strokeWeight: 6,
-              fillColor: "#ff00cc",
-              fillOpacity: 0.15, // subtle fill
-              zIndex: 10,
-              clickable: false,
-            }}
-          />
-          {/* Glowing marker for the mentioned place */}
-          <Marker
-            position={center}
-            label={
-              name
-                ? {
-                    text: name.replace("Trek", "").trim(),
-                    color: "#fff",
-                    fontWeight: "bold",
-                    fontSize: "18px",
-                  }
-                : undefined
-            }
-            icon={{
-              path: window.google?.maps.SymbolPath.CIRCLE || 0,
-              scale: 16,
-              fillColor: "#ff00cc",
-              fillOpacity: 1,
-              strokeWeight: 6,
-              strokeColor: "#fff",
-            }}
-          />
-          {/* Add CSS for marker glow animation */}
-          <style>{`
-            .gm-style .gm-style-iw-c {
-              filter: drop-shadow(0 0 12px #ff00cc) drop-shadow(0 0 24px #fff);
-              animation: pulse-glow 1.5s infinite alternate;
-            }
-            @keyframes pulse-glow {
-              0% { filter: drop-shadow(0 0 8px #ff00cc) drop-shadow(0 0 16px #fff); }
-              100% { filter: drop-shadow(0 0 24px #ff00cc) drop-shadow(0 0 32px #fff); }
-            }
-          `}</style>
-        </>
-      )}
-    </GoogleMap>
-  );
-};
+  // If name is provided and polygon exists, use its centroid as the map center
+  const mapCenter = polygon ? getPolygonCentroid(polygon) : center;
 
-export default Advanced3DMap;
+  useEffect(() => {
+    if (!isLoaded || !window.google) return;
+
+    if (viewMode === "street" && currentPosition && panoramaRef.current) {
+      setIsLoading(true);
+      // Use the panorama ID directly if available (most reliable method)
+      if (currentPosition.panoramaId) {
+        console.log('Using panorama ID directly:', currentPosition.panoramaId);
+        try {
+          if (!panoramaRef.current) {
+            console.error('Panorama ref is null');
+            setIsLoading(false);
+            return;
+          }
+          const pano = new window.google.maps.StreetViewPanorama(
+            panoramaRef.current,
+            {
+              pano: currentPosition.panoramaId, // Use the actual panorama ID from the position
+              pov: currentPosition.pov,
+              zoom: 1,
+              panControl: true,
+              zoomControl: true,
+              addressControl: false,
+              linksControl: true,
+              fullscreenControl: true,
+              motionTracking: false,
+              motionTrackingControl: false,
+              visible: true,
+              enableCloseButton: true
+            }
+          );
+          setPanorama(pano);
+          
+          // Add event listeners for panorama status and position changes
+          pano.addListener('status_changed', () => {
+            if (pano.getStatus() !== google.maps.StreetViewStatus.OK) {
+              console.error('Street View data not found for this location');
+              setViewMode('map'); // Fall back to map view
+            }
+            setIsLoading(false);
+          });
+
+          pano.addListener('position_changed', () => {
+            const position = pano.getPosition();
+            if (position) {
+              const newLatLng = {
+                lat: position.lat(),
+                lng: position.lng()
+              };
+              mapRef.current?.panTo(newLatLng);
+            }
+          });
+        } catch (error) {
+          console.error('Error creating panorama:', error);
+          setViewMode('map'); // Fall back to map view
+          setIsLoading(false);
+          // Clean up any existing panorama
+          if (panorama) {
+            window.google.maps.event.clearInstanceListeners(panorama);
+            panorama.setVisible(false);
+            if (panoramaRef.current) {
+              panoramaRef.current.innerHTML = '';
+            }
+            setPanorama(null);
+          }
+        }
+      } else {
+        // Create a Street View service to check if the panorama exists at the location
+        const streetViewService = new window.google.maps.StreetViewService();
+        
+        // Check if Street View is available at the specified location
+        // Use a larger radius to find nearby panoramas if the exact location doesn't have Street View data
+        streetViewService.getPanorama({
+          location: currentPosition.position,
+          radius: 500 // Search within 500 meters to find nearby panoramas
+        }, (data, status) => {
+          if (status === window.google.maps.StreetViewStatus.OK && data && data.location) {
+            // Street View is available, create the panorama
+            if (!panoramaRef.current) {
+              console.error('Panorama ref is null');
+              setIsLoading(false);
+              return;
+            }
+            const pano = new window.google.maps.StreetViewPanorama(
+              panoramaRef.current,
+              {
+                position: data.location.latLng, // Use the exact panorama location
+                pov: currentPosition.pov,
+                zoom: 1,
+                addressControl: false,
+                linksControl: true,
+                panControl: true,
+                showRoadLabels: false,
+                zoomControl: true,
+                fullscreenControl: true,
+                motionTracking: false,
+                motionTrackingControl: false,
+                visible: true
+              }
+            );
+            setPanorama(pano);
+            setIsLoading(false);
+          } else {
+            console.error('Street View data not found for this location:', status);
+            // Fall back to a known working panorama ID from Pune, Maharashtra
+            try {
+              if (!panoramaRef.current) {
+                console.error('Panorama ref is null');
+                setIsLoading(false);
+                return;
+              }
+              const fallbackPano = new window.google.maps.StreetViewPanorama(
+                panoramaRef.current,
+                {
+                  pano: "CAoSLEFGMVFpcE1aNHRXTGFwZnVZTXdnWXRfWnVLRXVJRGRXZXJNNXRMRnRYVGhj", // Known working panorama ID
+                  pov: currentPosition.pov,
+                  zoom: 1,
+                  addressControl: false,
+                  linksControl: true,
+                  panControl: true,
+                  showRoadLabels: false,
+                  zoomControl: true,
+                  fullscreenControl: true,
+                  motionTracking: false,
+                  motionTrackingControl: false,
+                  visible: true
+                }
+              );
+              setPanorama(fallbackPano);
+              setIsLoading(false);
+            } catch (error) {
+              console.error('Error creating fallback panorama:', error);
+              setViewMode('map');
+              setIsLoading(false);
+            }
+          }
+        });
+      }
+    } else if (mapRef.current && viewMode === "map" && polygon) {
+      const map = mapRef.current;
+      map.panTo(mapCenter);
+      map.setOptions({
+        tilt: 67.5,
+        heading: 45,
+        mapTypeId: "hybrid",
+        mapTypeControl: true,
+        streetViewControl: false
+      });
+    }
+
+    return () => {
+      setIsLoading(false);
+      if (panorama) {
+        // Remove all event listeners
+        window.google.maps.event.clearInstanceListeners(panorama);
+        // Hide the panorama
+        panorama.setVisible(false);
+        // Remove the panorama from the DOM
+        if (panoramaRef.current) {
+          panoramaRef.current.innerHTML = '';
+        }
+        setPanorama(null);
+      }
+    };
+  }, [isLoaded, viewMode, currentPosition, polygon, mapCenter, panorama]);
+
+  if (!isLoaded) {
+    return <div>Loading 3D map...</div>;
+  }
+
+  return (
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+      <div className="absolute top-4 right-4 z-10 space-y-2">
+        <div className="bg-white rounded-lg shadow-lg p-2">
+          <Button
+            variant={viewMode === "map" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setViewMode("map")}
+            className="mr-2"
+          >
+            <Map className="h-4 w-4 mr-2" />
+            Map
+          </Button>
+          <Button
+            variant={viewMode === "street" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setViewMode("street")}
+            disabled={!streetViewPositions}
+          >
+            <Eye className="h-4 w-4 mr-2" />
+            Street View
+          </Button>
+        </div>
+
+        {viewMode === "street" && streetViewPositions && (
+          <div className="bg-white rounded-lg shadow-lg p-2 flex flex-col space-y-2">
+            <div className="text-sm font-medium text-center text-gray-700">
+              {currentPosition?.title}
+            </div>
+            <div className="flex justify-between items-center">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentViewIndex((prev) => 
+                  prev > 0 ? prev - 1 : streetViewPositions.length - 1
+                )}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-sm text-gray-500">
+                {currentViewIndex + 1} / {streetViewPositions.length}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentViewIndex((prev) => 
+                  prev < streetViewPositions.length - 1 ? prev + 1 : 0
+                )}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+      
+      {viewMode === "street" && currentPosition ? (
+        <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+          <div ref={panoramaRef} style={containerStyle} />
+          {isLoading && (
+            <div
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                color: 'white',
+                padding: '1rem',
+                borderRadius: '0.5rem',
+                zIndex: 1000,
+              }}
+            >
+              Loading Street View...
+            </div>
+          )}
+        </div>
+      ) : (
+        <GoogleMap
+          mapContainerStyle={containerStyle}
+          center={mapCenter}
+          zoom={zoom}
+          onLoad={map => {
+            mapRef.current = map;
+          }}
+          options={{
+            mapTypeControl: true,
+            mapTypeControlOptions: {
+              style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
+              mapTypeIds: ["roadmap", "terrain", "hybrid", "satellite"],
+            },
+            zoomControl: true,
+            maxZoom: 20,
+            minZoom: 10,
+            tilt: 67.5,
+            heading: 45,
+            streetViewControl: false
+          }}
+        >
+          {polygon && (
+            <>
+              <Polygon
+                paths={polygon}
+                options={{
+                  fillColor: "#4CAF50",
+                  fillOpacity: 0.2,
+                  strokeColor: "#4CAF50",
+                  strokeOpacity: 1,
+                  strokeWeight: 2,
+                }}
+              />
+              <Marker
+                position={mapCenter}
+                icon={{
+                  path: google.maps.SymbolPath.CIRCLE,
+                  scale: 8,
+                  fillColor: "#4CAF50",
+                  fillOpacity: 1,
+                  strokeColor: "#FFFFFF",
+                  strokeWeight: 2,
+                }}
+              />
+            </>
+          )}
+        </GoogleMap>
+      )}
+    </div>
+  );
+}

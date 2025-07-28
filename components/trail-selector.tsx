@@ -17,18 +17,27 @@ export function TrailSelector({ selectedTrail, onTrailSelect }: TrailSelectorPro
       name: "Sinhagad Fort Trek",
       riskLevel: "moderate",
       aiRiskScore: 6.2,
+      elevation: "1312m",
+      difficulty: "Moderate",
+      coords: { lat: 18.365664, lng: 73.755269 },
     },
     {
       id: 2,
       name: "Rajgad Fort Trek",
       riskLevel: "high",
       aiRiskScore: 8.1,
+      elevation: "1376m",
+      difficulty: "Challenging",
+      coords: { lat: 18.246111, lng: 73.682222 },
     },
     {
       id: 3,
       name: "Torna Fort Trek",
       riskLevel: "low",
       aiRiskScore: 3.4,
+      elevation: "1403m",
+      difficulty: "Easy",
+      coords: { lat: 18.276072, lng: 73.622716 },
     },
   ]
 
@@ -79,13 +88,37 @@ export function TrailSelector({ selectedTrail, onTrailSelect }: TrailSelectorPro
           </Select>
 
           {selectedTrail && (
-            <div className="pt-2 border-t space-y-2">
+            <div className="pt-2 border-t space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs text-gray-600">AI Risk Score</span>
                 <div className="flex items-center space-x-1">
                   <TrendingUp className="h-3 w-3 text-orange-500" />
                   <span className="text-sm font-medium">
                     {trails.find((t) => t.id === selectedTrail.id)?.aiRiskScore}/10
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-gray-600">Elevation</span>
+                  <span className="font-medium">
+                    {trails.find((t) => t.id === selectedTrail.id)?.elevation}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-gray-600">Difficulty</span>
+                  <span className="font-medium">
+                    {trails.find((t) => t.id === selectedTrail.id)?.difficulty}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-gray-600">Coordinates</span>
+                  <span className="font-mono text-[10px]">
+                    {trails.find((t) => t.id === selectedTrail.id)?.coords.lat.toFixed(6)},
+                    {trails.find((t) => t.id === selectedTrail.id)?.coords.lng.toFixed(6)}
                   </span>
                 </div>
               </div>
