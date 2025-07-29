@@ -10,17 +10,33 @@ export async function POST(req: NextRequest) {
   try {
     const { email, password } = await req.json();
 
+    // Validate input
+    if (!email || !password) {
+      return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
+    }
+
     await connectToDB();
 
+    // Find user by email
     const user = await User.findOne({ email });
     if (!user) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
+    // Check if user is active
+    if (!user.isActive) {
+      return NextResponse.json({ error: 'Account is deactivated' }, { status: 401 });
+    }
+
+    // Verify password
     const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
+
+    // Update last login
+    user.lastLogin = new Date();
+    await user.save();
 
     // Create JWT token
     const token = jwt.sign(
@@ -36,7 +52,8 @@ export async function POST(req: NextRequest) {
         user: {
           id: user._id,
           email: user.email,
-          displayName: user.displayName || user.email.split('@')[0]
+          displayName: user.displayName,
+          role: user.role
         }
       },
       { status: 200 }
@@ -51,6 +68,7 @@ export async function POST(req: NextRequest) {
 
     return response;
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error('Login error:', err);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 } 

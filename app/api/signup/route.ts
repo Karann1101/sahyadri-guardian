@@ -8,21 +8,34 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, password } = await req.json();
+    const { email, password, displayName } = await req.json();
+
+    // Validate input
+    if (!email || !password) {
+      return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
+    }
 
     await connectToDB();
 
+    // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return NextResponse.json({ error: 'User already exists' }, { status: 400 });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 12);
 
-    const newUser = new User({ email, password: hashedPassword });
+    // Create new user
+    const newUser = new User({
+      email,
+      password: hashedPassword,
+      displayName: displayName || email.split('@')[0]
+    });
+
     await newUser.save();
 
-    // Create JWT token for the new user
+    // Create JWT token
     const token = jwt.sign(
       { userId: newUser._id, email: newUser.email },
       JWT_SECRET,
@@ -36,7 +49,7 @@ export async function POST(req: NextRequest) {
         user: {
           id: newUser._id,
           email: newUser.email,
-          displayName: newUser.displayName || newUser.email.split('@')[0]
+          displayName: newUser.displayName
         }
       },
       { status: 201 }
@@ -51,6 +64,7 @@ export async function POST(req: NextRequest) {
 
     return response;
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error('Signup error:', err);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

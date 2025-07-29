@@ -111,8 +111,66 @@ export function MapContainer({ selectedTrail, userLocation, onHazardReport }: Ma
         { lat: 18.2750, lng: 73.6222 },
         { lat: 18.2752, lng: 73.6212 },
         { lat: 18.2760, lng: 73.6208 },
-        { lat: 18.2771, lng: 73.6207 },
+        { lat: 18.2771, lng: 73.6207 }
       ],
+      features: [
+        {
+          name: "Entrance",
+          color: "#e57373",
+          path: [
+            { lat: 18.2771, lng: 73.6207 },
+            { lat: 18.2778, lng: 73.6212 },
+            { lat: 18.2776, lng: 73.6220 },
+            { lat: 18.2770, lng: 73.6230 }
+          ]
+        },
+        {
+          name: "Main Fort",
+          color: "#81c784",
+          path: [
+            { lat: 18.2762, lng: 73.6235 },
+            { lat: 18.2755, lng: 73.6232 },
+            { lat: 18.2750, lng: 73.6222 },
+            { lat: 18.2752, lng: 73.6212 },
+            { lat: 18.2760, lng: 73.6208 }
+          ]
+        },
+        {
+          name: "East Bastion",
+          color: "#64b5f6",
+          path: [
+            { lat: 18.2775, lng: 73.6215 },
+            { lat: 18.2777, lng: 73.6222 },
+            { lat: 18.2775, lng: 73.6230 }
+          ]
+        },
+        {
+          name: "West Residential Area",
+          color: "#ffd54f",
+          path: [
+            { lat: 18.2765, lng: 73.6242 },
+            { lat: 18.2757, lng: 73.6240 },
+            { lat: 18.2747, lng: 73.6232 }
+          ]
+        },
+        {
+          name: "Southern Entry",
+          color: "#ba68c8",
+          path: [
+            { lat: 18.2746, lng: 73.6222 },
+            { lat: 18.2750, lng: 73.6212 }
+          ]
+        },
+        {
+          name: "Fort wall",
+          color: "#4dd0e1",
+          path: [
+            { lat: 18.2763, lng: 73.6205 },
+            { lat: 18.2771, lng: 73.6207 },
+            { lat: 18.2778, lng: 73.6212 }
+          ]
+        }
+      ]
     },
   ];
 
@@ -212,117 +270,228 @@ export function MapContainer({ selectedTrail, userLocation, onHazardReport }: Ma
 
     // Only draw and highlight the selected trail
     if (trail) {
-      // Draw polygon with bold border and subtle fill
-      const polygon = new window.google.maps.Polygon({
-        paths: trail.path,
-        strokeColor: '#ff00cc',
-        strokeOpacity: 1,
-        strokeWeight: 4,
-        fillColor: '#ff00cc',
-        fillOpacity: 0.2,
-        zIndex: 20,
-      });
-      polygon.setMap(map);
-      newMarkers.push(polygon);
-
-      // Add outer glow effect
-      const outerGlow = new window.google.maps.Polygon({
-        paths: trail.path,
-        strokeColor: '#ffffff',
-        strokeOpacity: 0.8,
-        strokeWeight: 8,
-        fillOpacity: 0,
-        zIndex: 19,
-      });
-      outerGlow.setMap(map);
-      newMarkers.push(outerGlow);
-
-      // Marker at centroid
-      const centroid = getCentroid(trail.path);
-      const marker = new window.google.maps.Marker({
-        position: centroid,
-        map: map,
-        title: `${trail.name} (Centroid)` + `\nLat: ${centroid.lat.toFixed(6)}, Lng: ${centroid.lng.toFixed(6)}`,
-        label: {
-          text: `${centroid.lat.toFixed(5)}, ${centroid.lng.toFixed(5)}`,
-          color: '#ff00cc',
-          fontWeight: 'bold',
-          fontSize: '14px',
-        },
-        icon: {
-          path: window.google.maps.SymbolPath.CIRCLE,
-          scale: 14,
-          fillColor: '#fff',
-          fillOpacity: 1,
-          strokeWeight: 6,
+      // If Torna Fort and features exist, draw each feature polygon
+      if (trail.name === "Torna Fort Trek" && Array.isArray(trail.features)) {
+        let featureBounds = new window.google.maps.LatLngBounds();
+        trail.features.forEach((feature, idx) => {
+          if (feature.path.length >= 3) {
+            // Draw as polygon
+            const featurePolygon = new window.google.maps.Polygon({
+              paths: feature.path,
+              strokeColor: feature.color,
+              strokeOpacity: 1,
+              strokeWeight: 3,
+              fillColor: feature.color,
+              fillOpacity: 0.45,
+              zIndex: 21,
+            });
+            featurePolygon.setMap(map);
+            newMarkers.push(featurePolygon);
+            feature.path.forEach((pt) => featureBounds.extend(new window.google.maps.LatLng(pt.lat, pt.lng)));
+            // Optionally, add a label at the centroid of each feature
+            const centroid = getCentroid(feature.path);
+            const labelMarker = new window.google.maps.Marker({
+              position: centroid,
+              map: map,
+              icon: {
+                path: window.google.maps.SymbolPath.CIRCLE,
+                scale: 0.1, // invisible, just for label
+                fillOpacity: 0,
+                strokeWeight: 0,
+              },
+              label: {
+                text: feature.name,
+                color: feature.color,
+                fontWeight: 'bold',
+                fontSize: '12px',
+              },
+            });
+            newMarkers.push(labelMarker);
+            // DEBUG: Add a visible marker at centroid
+            const debugMarker = new window.google.maps.Marker({
+              position: centroid,
+              map: map,
+              icon: {
+                path: window.google.maps.SymbolPath.CIRCLE,
+                scale: 6,
+                fillColor: feature.color,
+                fillOpacity: 1,
+                strokeWeight: 2,
+                strokeColor: '#000',
+              },
+              title: `DEBUG: ${feature.name}`,
+            });
+            newMarkers.push(debugMarker);
+            // DEBUG: Log feature
+            console.log('Drawing feature polygon:', feature.name, feature.path);
+          } else if (feature.path.length === 2) {
+            // Draw as polyline for 2-point features
+            const featureLine = new window.google.maps.Polyline({
+              path: feature.path,
+              strokeColor: feature.color,
+              strokeOpacity: 1,
+              strokeWeight: 4,
+              zIndex: 22,
+            });
+            featureLine.setMap(map);
+            newMarkers.push(featureLine);
+            feature.path.forEach((pt) => featureBounds.extend(new window.google.maps.LatLng(pt.lat, pt.lng)));
+            // Optionally, add a label at the midpoint
+            const midLat = (feature.path[0].lat + feature.path[1].lat) / 2;
+            const midLng = (feature.path[0].lng + feature.path[1].lng) / 2;
+            const labelMarker = new window.google.maps.Marker({
+              position: { lat: midLat, lng: midLng },
+              map: map,
+              icon: {
+                path: window.google.maps.SymbolPath.CIRCLE,
+                scale: 0.1,
+                fillOpacity: 0,
+                strokeWeight: 0,
+              },
+              label: {
+                text: feature.name,
+                color: feature.color,
+                fontWeight: 'bold',
+                fontSize: '12px',
+              },
+            });
+            newMarkers.push(labelMarker);
+            // DEBUG: Add a visible marker at midpoint
+            const debugMarker = new window.google.maps.Marker({
+              position: { lat: midLat, lng: midLng },
+              map: map,
+              icon: {
+                path: window.google.maps.SymbolPath.CIRCLE,
+                scale: 6,
+                fillColor: feature.color,
+                fillOpacity: 1,
+                strokeWeight: 2,
+                strokeColor: '#000',
+              },
+              title: `DEBUG: ${feature.name}`,
+            });
+            newMarkers.push(debugMarker);
+            // DEBUG: Log feature
+            console.log('Drawing feature polyline:', feature.name, feature.path);
+          }
+        });
+        // Fit map to all feature overlays
+        if (!featureBounds.isEmpty()) {
+          map.fitBounds(featureBounds, { padding: 100 });
+        }
+        // Do NOT add centroid marker or pan/zoom for Torna Fort
+      } else {
+        // Draw polygon with bold border and subtle fill (default for other forts)
+        const polygon = new window.google.maps.Polygon({
+          paths: trail.path,
           strokeColor: '#ff00cc',
-        },
-      });
-      newMarkers.push(marker);
+          strokeOpacity: 1,
+          strokeWeight: 4,
+          fillColor: '#ff00cc',
+          fillOpacity: 0.2,
+          zIndex: 20,
+        });
+        polygon.setMap(map);
+        newMarkers.push(polygon);
 
-      // Zoom and center to centroid with smooth animation
-      map.panTo(centroid);
-      map.setZoom(17);
-      
-      // Add bounds padding for better view
-      const bounds = new window.google.maps.LatLngBounds();
-      trail.path.forEach((point: { lat: number; lng: number }) => {
-        bounds.extend(new window.google.maps.LatLng(point.lat, point.lng));
-      });
-      map.fitBounds(bounds, { padding: 100 });
-    }
-
-    // Add hazard markers with pulsing effect
-    hazards.forEach((hazard) => {
-      const hazardMarker = new window.google.maps.Marker({
-        position: { lat: hazard.lat, lng: hazard.lng },
-        map: map,
-        title: hazard.description,
-        icon: {
-          path: window.google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
-          scale: 10,
-          fillColor: getSeverityColor(hazard.severity),
-          fillOpacity: 1,
-          strokeWeight: 2,
-          strokeColor: '#fff',
-        },
-      });
-      const infoWindow = new window.google.maps.InfoWindow({
-        content: `
-          <div class="p-2">
-            <h3 class="font-semibold">${hazard.type.replace('_', ' ')}</h3>
-            <p class="text-sm text-gray-600">${hazard.description}</p>
-            <p class="text-xs text-gray-500 mt-1">
-              Reported: ${hazard.reportedAt.toLocaleDateString()}
-            </p>
-          </div>
-        `,
-      });
-      hazardMarker.addListener('click', () => {
-        infoWindow.open(map, hazardMarker);
-      });
-      newMarkers.push(hazardMarker);
-    });
-
-    // Add user location marker
-    if (userLocation) {
-      const userMarker = new window.google.maps.Marker({
-        position: userLocation,
-        map: map,
-        title: 'Your Location',
-        icon: {
-          path: window.google.maps.SymbolPath.CIRCLE,
-          scale: 10,
-          fillColor: '#4285F4',
-          fillOpacity: 1,
-          strokeWeight: 3,
+        // Add outer glow effect
+        const outerGlow = new window.google.maps.Polygon({
+          paths: trail.path,
           strokeColor: '#ffffff',
-        },
-      });
-      newMarkers.push(userMarker);
-    }
+          strokeOpacity: 0.8,
+          strokeWeight: 8,
+          fillOpacity: 0,
+          zIndex: 19,
+        });
+        outerGlow.setMap(map);
+        newMarkers.push(outerGlow);
 
-    setMarkers(newMarkers);
+        // Marker at centroid
+        const centroid = getCentroid(trail.path);
+        const marker = new window.google.maps.Marker({
+          position: centroid,
+          map: map,
+          title: `${trail.name} (Centroid)` + `\nLat: ${centroid.lat.toFixed(6)}, Lng: ${centroid.lng.toFixed(6)}`,
+          label: {
+            text: `${centroid.lat.toFixed(5)}, ${centroid.lng.toFixed(5)}`,
+            color: '#ff00cc',
+            fontWeight: 'bold',
+            fontSize: '14px',
+          },
+          icon: {
+            path: "M2,22 L2,12 L6,12 L6,8 L10,8 L10,12 L14,12 L14,8 L18,8 L18,12 L22,12 L22,22 L16,22 L16,16 L8,16 L8,22 Z M8,22 L8,18 L16,18 L16,22 Z", // Simple fort/castle SVG path
+            scale: 1.5,
+            fillColor: '#8B5C2A', // Fort brown
+            fillOpacity: 1,
+            strokeWeight: 2,
+            strokeColor: '#3E2723', // Darker outline
+          },
+        });
+        newMarkers.push(marker);
+
+        // Zoom and center to centroid with smooth animation
+        map.panTo(centroid);
+        map.setZoom(17);
+        // Add bounds padding for better view
+        const bounds = new window.google.maps.LatLngBounds();
+        trail.path.forEach((point: { lat: number; lng: number }) => {
+          bounds.extend(new window.google.maps.LatLng(point.lat, point.lng));
+        });
+        map.fitBounds(bounds, { padding: 100 });
+      }
+
+      // Add hazard markers with pulsing effect
+      hazards.forEach((hazard) => {
+        const hazardMarker = new window.google.maps.Marker({
+          position: { lat: hazard.lat, lng: hazard.lng },
+          map: map,
+          title: hazard.description,
+          icon: {
+            path: window.google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+            scale: 10,
+            fillColor: getSeverityColor(hazard.severity),
+            fillOpacity: 1,
+            strokeWeight: 2,
+            strokeColor: '#fff',
+          },
+        });
+        const infoWindow = new window.google.maps.InfoWindow({
+          content: `
+            <div class="p-2">
+              <h3 class="font-semibold">${hazard.type.replace('_', ' ')}</h3>
+              <p class="text-sm text-gray-600">${hazard.description}</p>
+              <p class="text-xs text-gray-500 mt-1">
+                Reported: ${hazard.reportedAt.toLocaleDateString()}
+              </p>
+            </div>
+          `,
+        });
+        hazardMarker.addListener('click', () => {
+          infoWindow.open(map, hazardMarker);
+        });
+        newMarkers.push(hazardMarker);
+      });
+
+      // Add user location marker
+      if (userLocation) {
+        const userMarker = new window.google.maps.Marker({
+          position: userLocation,
+          map: map,
+          title: 'Your Location',
+          icon: {
+            path: window.google.maps.SymbolPath.CIRCLE,
+            scale: 10,
+            fillColor: '#4285F4',
+            fillOpacity: 1,
+            strokeWeight: 3,
+            strokeColor: '#ffffff',
+          },
+        });
+        newMarkers.push(userMarker);
+      }
+
+      setMarkers(newMarkers);
+    }
   }, [map, userLocation, isGoogleLoaded, selectedTrail]);
 
   const getRiskColor = (level: string) => {

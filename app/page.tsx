@@ -66,9 +66,9 @@ export default function HomePage() {
   }
 
   // Show AuthForm if user not logged in
-  if (!user) {
-    return <AuthForm onAuthSuccess={handleAuthSuccess} />
-  }
+  // if (!user) {
+  //   return <AuthForm onAuthSuccess={handleAuthSuccess} />
+  // }
 
   return (
     <div className="flex h-screen bg-gray-50">

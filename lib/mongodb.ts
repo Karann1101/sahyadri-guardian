@@ -10,12 +10,23 @@ let cached = (global as any).mongoose || { conn: null, promise: null };
 
 export async function connectToDB() {
   if (cached.conn) return cached.conn;
+  
   if (!cached.promise) {
-    cached.promise = mongoose.connect(MONGODB_URI, {
-      dbName: 'sahyadri_guardian',
+    const opts = {
       bufferCommands: false,
-    }).then(m => m);
+    };
+
+    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
+      return mongoose;
+    });
   }
-  cached.conn = await cached.promise;
+
+  try {
+    cached.conn = await cached.promise;
+  } catch (e) {
+    cached.promise = null;
+    throw e;
+  }
+
   return cached.conn;
-}
+} 
