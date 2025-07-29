@@ -1,16 +1,19 @@
 "use client"
 
-import { Mountain, TrendingUp } from "lucide-react"
+import { Mountain, TrendingUp, Eye, BookOpen } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface TrailSelectorProps {
   selectedTrail: any
   onTrailSelect: (trail: any) => void
+  onStreetViewClick?: (trail: any) => void
+  onTourClick?: (trail: any) => void
 }
 
-export function TrailSelector({ selectedTrail, onTrailSelect }: TrailSelectorProps) {
+export function TrailSelector({ selectedTrail, onTrailSelect, onStreetViewClick, onTourClick }: TrailSelectorProps) {
   const trails = [
     {
       id: 1,
@@ -57,12 +60,12 @@ export function TrailSelector({ selectedTrail, onTrailSelect }: TrailSelectorPro
   }
 
   return (
-    <Card className="w-64 shadow-lg">
+    <Card className="w-64 shadow-xl bg-gradient-to-br from-white to-blue-50 border-0">
       <CardContent className="p-4">
         <div className="space-y-3">
-          <div className="flex items-center space-x-2">
-            <Mountain className="h-4 w-4 text-gray-600" />
-            <span className="text-sm font-medium">Select Trail</span>
+          <div className="flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-purple-600 p-2 rounded-lg text-white">
+            <Mountain className="h-4 w-4" />
+            <span className="text-sm font-semibold">Select Trail</span>
           </div>
 
           <Select
@@ -88,42 +91,68 @@ export function TrailSelector({ selectedTrail, onTrailSelect }: TrailSelectorPro
           </Select>
 
           {selectedTrail && (
-            <div className="pt-2 border-t space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-600">AI Risk Score</span>
+            <div className="pt-2 border-t border-gray-200 space-y-3">
+              <div className="flex items-center justify-between bg-gradient-to-r from-orange-400 to-red-500 p-2 rounded-lg text-white">
+                <span className="text-xs font-semibold">AI Risk Score</span>
                 <div className="flex items-center space-x-1">
-                  <TrendingUp className="h-3 w-3 text-orange-500" />
-                  <span className="text-sm font-medium">
+                  <TrendingUp className="h-3 w-3" />
+                  <span className="text-sm font-bold">
                     {trails.find((t) => t.id === selectedTrail.id)?.aiRiskScore}/10
                   </span>
                 </div>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2 bg-gradient-to-br from-emerald-50 to-green-100 p-3 rounded-lg">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-gray-600">Elevation</span>
-                  <span className="font-medium">
+                  <span className="text-gray-700 font-medium">Elevation</span>
+                  <span className="font-bold text-emerald-700">
                     {trails.find((t) => t.id === selectedTrail.id)?.elevation}
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-gray-600">Difficulty</span>
-                  <span className="font-medium">
+                  <span className="text-gray-700 font-medium">Difficulty</span>
+                  <span className="font-bold text-emerald-700">
                     {trails.find((t) => t.id === selectedTrail.id)?.difficulty}
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-gray-600">Coordinates</span>
-                  <span className="font-mono text-[10px]">
+                  <span className="text-gray-700 font-medium">Coordinates</span>
+                  <span className="font-mono text-[10px] text-emerald-700">
                     {trails.find((t) => t.id === selectedTrail.id)?.coords.lat.toFixed(6)},
                     {trails.find((t) => t.id === selectedTrail.id)?.coords.lng.toFixed(6)}
                   </span>
                 </div>
               </div>
 
-              <div className="text-xs text-gray-500">Based on weather, terrain, and recent reports</div>
+              <div className="text-xs text-gray-500 bg-blue-50 p-2 rounded-lg">Based on weather, terrain, and recent reports</div>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          {selectedTrail && (onStreetViewClick || onTourClick) && (
+            <div className="pt-3 border-t border-gray-200 space-y-2">
+              {onStreetViewClick && (
+                <Button
+                  onClick={() => onStreetViewClick(selectedTrail)}
+                  className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg transition-all duration-200"
+                  size="sm"
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  View Street View
+                </Button>
+              )}
+              {onTourClick && (
+                <Button
+                  onClick={() => onTourClick(selectedTrail)}
+                  className="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white shadow-lg transition-all duration-200"
+                  size="sm"
+                >
+                  <BookOpen className="h-4 w-4 mr-2" />
+                  Start Interactive Tour
+                </Button>
+              )}
             </div>
           )}
         </div>

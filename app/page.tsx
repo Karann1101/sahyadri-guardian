@@ -11,6 +11,8 @@ import { useAuth } from "@/hooks/use-auth"
 import { useGeolocation } from "@/hooks/use-geolocation"
 import AuthForm from "@/components/auth-form"
 import Advanced3DMap from "@/components/advanced-3d-map"
+import FortStreetViewModal from "@/components/fort-street-view-modal"
+import InteractiveFortTour from "@/components/interactive-fort-tour"
 
 const TRAILS = [
   {
@@ -44,6 +46,10 @@ export default function HomePage() {
   const [showHazardModal, setShowHazardModal] = useState(false)
   const [hazardLocation, setHazardLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [showStreetViewModal, setShowStreetViewModal] = useState(false)
+  const [selectedFortForStreetView, setSelectedFortForStreetView] = useState<any>(null)
+  const [showTourModal, setShowTourModal] = useState(false)
+  const [selectedFortForTour, setSelectedFortForTour] = useState<any>(null)
   const { user, loading, checkAuth } = useAuth()
   const { location, error: locationError } = useGeolocation()
 
@@ -98,7 +104,18 @@ export default function HomePage() {
 
           <div className="absolute top-4 right-4 space-y-4">
             <WeatherPanel />
-            <TrailSelector selectedTrail={selectedTrail} onTrailSelect={setSelectedTrail} />
+            <TrailSelector 
+              selectedTrail={selectedTrail} 
+              onTrailSelect={setSelectedTrail}
+              onStreetViewClick={(trail) => {
+                setSelectedFortForStreetView(trail)
+                setShowStreetViewModal(true)
+              }}
+              onTourClick={(trail) => {
+                setSelectedFortForTour(trail)
+                setShowTourModal(true)
+              }}
+            />
           </div>
 
           {locationError && (
@@ -119,6 +136,26 @@ export default function HomePage() {
           }}
         />
       )}
+
+      {/* Street View Modal */}
+      <FortStreetViewModal
+        isOpen={showStreetViewModal}
+        onClose={() => {
+          setShowStreetViewModal(false)
+          setSelectedFortForStreetView(null)
+        }}
+        selectedFort={selectedFortForStreetView}
+      />
+
+      {/* Interactive Tour Modal */}
+      <InteractiveFortTour
+        isOpen={showTourModal}
+        onClose={() => {
+          setShowTourModal(false)
+          setSelectedFortForTour(null)
+        }}
+        selectedFort={selectedFortForTour}
+      />
     </div>
   )
 }
