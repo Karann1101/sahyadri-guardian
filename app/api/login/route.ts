@@ -3,8 +3,17 @@ import { connectToDB } from '@/lib/mongodb';
 import { User } from '@/models/user';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+
+// Define LoginEvent schema and model
+const loginEventSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' },
+  email: { type: String, required: true },
+  timestamp: { type: Date, default: Date.now }
+});
+const LoginEvent = mongoose.models.LoginEvent || mongoose.model('LoginEvent', loginEventSchema);
 
 export async function POST(req: NextRequest) {
   try {
@@ -37,6 +46,13 @@ export async function POST(req: NextRequest) {
     // Update last login
     user.lastLogin = new Date();
     await user.save();
+
+    // Log the sign-in event
+    await LoginEvent.create({
+      userId: user._id,
+      email: user.email,
+      timestamp: new Date()
+    });
 
     // Create JWT token
     const token = jwt.sign(

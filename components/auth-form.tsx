@@ -40,6 +40,7 @@ export default function AuthForm({ onAuthSuccess }: AuthFormProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: formData.email, password: formData.password }),
+        credentials: 'include' // Ensure cookies are included
       });
 
       const data = await res.json();

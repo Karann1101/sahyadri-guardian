@@ -87,35 +87,7 @@ export default function FortStreetViewModal({
                 </Badge>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={resetView}
-                title="Reset to first view"
-                className="border-white/30 text-white hover:bg-white/20"
-              >
-                <RotateCcw className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsFullscreen(!isFullscreen)}
-                title={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
-                className="border-white/30 text-white hover:bg-white/20"
-              >
-                <Eye className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onClose}
-                title="Close"
-                className="border-white/30 text-white hover:bg-white/20"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
+            {/* Removed header buttons as requested */}
           </div>
         </DialogHeader>
 
@@ -130,6 +102,39 @@ export default function FortStreetViewModal({
               height="100%"
               className="rounded-b-lg"
             />
+          </div>
+          {/* Control Buttons Row */}
+          <div className="flex justify-end gap-3 px-6 py-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={resetView}
+              title="Reset to first view"
+              className="flex items-center gap-2 border-gray-300 bg-white hover:bg-blue-100 text-blue-700 shadow focus:outline-none focus:ring-2 focus:ring-blue-400"
+            >
+              <RotateCcw className="h-4 w-4" stroke="#1f2937" />
+              <span>Reset to view first</span>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsFullscreen(!isFullscreen)}
+              title={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+              className="flex items-center gap-2 border-gray-300 bg-white hover:bg-green-100 text-green-700 shadow focus:outline-none focus:ring-2 focus:ring-green-400"
+            >
+              <Eye className="h-4 w-4" stroke="#1f2937" />
+              <span>{isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}</span>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onClose}
+              title="Close"
+              className="flex items-center gap-2 border-gray-300 bg-white hover:bg-red-100 text-red-700 shadow focus:outline-none focus:ring-2 focus:ring-red-400"
+            >
+              <X className="h-4 w-4" stroke="#1f2937" />
+              <span>Close</span>
+            </Button>
           </div>
 
           {/* Navigation Controls */}

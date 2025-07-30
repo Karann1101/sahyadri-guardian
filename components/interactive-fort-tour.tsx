@@ -19,7 +19,8 @@ import {
   History,
   Eye,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  RotateCcw
 } from 'lucide-react';
 import StreetView from './street-view';
 import { FORT_TOURS, type FortTour, type TourStep } from './fort-tour-data';
@@ -115,7 +116,7 @@ export default function InteractiveFortTour({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-7xl h-[90vh] p-0 bg-gradient-to-br from-slate-50 to-blue-50">
+      <DialogContent className="max-w-7xl h-[90vh] p-0 bg-gradient-to-br from-slate-50 to-blue-50 flex flex-col md:flex-row">
         <DialogHeader className="p-6 pb-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
           <div className="flex items-center justify-between">
             <div>
@@ -135,20 +136,37 @@ export default function InteractiveFortTour({
                 </Badge>
               </div>
             </div>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={onClose}
-              className="border-white/20 text-white hover:bg-white/10"
-            >
-              <X className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setCurrentStepIndex(0);
+                  setIsPlaying(false);
+                }}
+                className="border-white/20 text-white hover:bg-white/10 focus:ring-2 focus:ring-yellow-400 focus:outline-none transition"
+                aria-label="Reload Tour"
+                title="Reload Tour"
+              >
+                <RotateCcw className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={onClose}
+                className="border-white/20 text-white hover:bg-white/10 focus:ring-2 focus:ring-red-400 focus:outline-none transition"
+                aria-label="Close Tour"
+                title="Close Tour"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </DialogHeader>
 
         <div className="flex h-full">
           {/* Left Panel - Tour Controls and Info */}
-          <div className="w-1/3 border-r border-gray-200 p-6 space-y-6 bg-white/80 backdrop-blur-sm">
+          <div className="w-full md:w-1/3 border-r border-gray-200 p-6 space-y-6 bg-white/80 backdrop-blur-sm overflow-y-auto max-h-[calc(90vh-80px)]">
             {/* Progress */}
             <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-4 rounded-xl text-white">
               <div className="flex justify-between items-center mb-3">
@@ -187,7 +205,7 @@ export default function InteractiveFortTour({
                           size="sm"
                           onClick={handlePrevious}
                           disabled={currentStepIndex === 0}
-                          className="border-white/30 text-white hover:bg-white/20 disabled:opacity-50"
+                          className="border-white/30 text-white hover:bg-white/20 disabled:opacity-50 focus:ring-2 focus:ring-blue-400 focus:outline-none transition"
                         >
                           <SkipBack className="h-4 w-4" />
                         </Button>
@@ -204,7 +222,7 @@ export default function InteractiveFortTour({
                           size="sm"
                           onClick={handleNext}
                           disabled={currentStepIndex === tourData.steps.length - 1}
-                          className="border-white/30 text-white hover:bg-white/20 disabled:opacity-50"
+                          className="border-white/30 text-white hover:bg-white/20 disabled:opacity-50 focus:ring-2 focus:ring-blue-400 focus:outline-none transition"
                         >
                           <SkipForward className="h-4 w-4" />
                         </Button>
@@ -218,7 +236,7 @@ export default function InteractiveFortTour({
                       variant="outline"
                       size="sm"
                       onClick={() => setShowFacts(!showFacts)}
-                      className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 hover:from-blue-600 hover:to-blue-700"
+                      className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 hover:from-blue-600 hover:to-blue-700 focus:ring-2 focus:ring-blue-400 focus:outline-none transition"
                     >
                       <Lightbulb className="h-4 w-4 mr-2" />
                       Quick Facts
@@ -227,7 +245,7 @@ export default function InteractiveFortTour({
                       variant="outline"
                       size="sm"
                       onClick={() => setShowHistory(!showHistory)}
-                      className="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white border-0 hover:from-green-600 hover:to-green-700"
+                      className="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white border-0 hover:from-green-600 hover:to-green-700 focus:ring-2 focus:ring-green-400 focus:outline-none transition"
                     >
                       <History className="h-4 w-4 mr-2" />
                       History
@@ -297,7 +315,7 @@ export default function InteractiveFortTour({
                       variant={currentStepIndex === index ? "default" : "outline"}
                       size="sm"
                       onClick={() => handleStepClick(index)}
-                      className={`w-full justify-start text-left h-auto p-3 rounded-lg transition-all duration-200 ${
+                      className={`w-full justify-start text-left h-auto p-3 rounded-lg transition-all duration-200 focus:ring-2 focus:ring-purple-400 focus:outline-none ${
                         currentStepIndex === index 
                           ? "bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-lg" 
                           : "bg-white/80 hover:bg-gradient-to-r hover:from-purple-100 hover:to-pink-100 border-purple-200"
@@ -317,7 +335,7 @@ export default function InteractiveFortTour({
           </div>
 
           {/* Right Panel - Street View */}
-          <div className="flex-1 relative">
+          <div className="flex-1 relative w-full">
             {currentStep && (
               <StreetView
                 latitude={currentStep.position.lat}
@@ -326,6 +344,11 @@ export default function InteractiveFortTour({
                 pitch={currentStep.pov.pitch}
                 height="100%"
                 className="rounded-none"
+                onClose={onClose}
+                onReset={() => {
+                  setCurrentStepIndex(0);
+                  setIsPlaying(false);
+                }}
               />
             )}
           </div>

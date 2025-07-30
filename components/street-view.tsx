@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { Loader } from '@googlemaps/js-api-loader';
+import { RotateCcw, Maximize2, X } from 'lucide-react';
 
 interface StreetViewProps {
   latitude: number;
@@ -12,6 +13,9 @@ interface StreetViewProps {
   width?: string;
   height?: string;
   className?: string;
+  onReset?: () => void;
+  onFullscreen?: () => void;
+  onClose?: () => void;
 }
 
 const StreetView: React.FC<StreetViewProps> = ({
@@ -22,11 +26,15 @@ const StreetView: React.FC<StreetViewProps> = ({
   zoom = 1,
   width = '100%',
   height = '400px',
-  className = ''
+  className = '',
+  onReset,
+  onFullscreen,
+  onClose
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [panorama, setPanorama] = useState<any>(null);
 
   useEffect(() => {
     const initStreetView = async () => {
@@ -44,7 +52,7 @@ const StreetView: React.FC<StreetViewProps> = ({
 
         if (!mapRef.current) return;
 
-        const panorama = new google.maps.StreetViewPanorama(
+        const pano = new google.maps.StreetViewPanorama(
           mapRef.current,
           {
             position: { lat: latitude, lng: longitude },
@@ -54,17 +62,22 @@ const StreetView: React.FC<StreetViewProps> = ({
             },
             zoom: zoom,
             addressControl: true,
-            fullscreenControl: true,
+            fullscreenControl: false, // Hide default fullscreen
             motionTracking: false,
             motionTrackingControl: false,
             showRoadLabels: true,
-            visible: true
+            visible: true,
+            zoomControl: false,
+            linksControl: false,
+            panControl: false,
+            enableCloseButton: false
           }
         );
+        setPanorama(pano);
 
         // Handle panorama load events
-        google.maps.event.addListener(panorama, 'status_changed', () => {
-          const status = panorama.getStatus();
+        google.maps.event.addListener(pano, 'status_changed', () => {
+          const status = pano.getStatus();
           if (status === google.maps.StreetViewStatus.OK) {
             setIsLoading(false);
           } else if (status === google.maps.StreetViewStatus.ZERO_RESULTS) {
@@ -75,7 +88,6 @@ const StreetView: React.FC<StreetViewProps> = ({
             setIsLoading(false);
           }
         });
-
       } catch (err) {
         console.error('Error loading Street View:', err);
         setError('Failed to load Street View');
@@ -85,6 +97,29 @@ const StreetView: React.FC<StreetViewProps> = ({
 
     initStreetView();
   }, [latitude, longitude, heading, pitch, zoom]);
+
+  // Custom handlers
+  const handleReset = () => {
+    if (panorama) {
+      panorama.setPosition({ lat: latitude, lng: longitude });
+      panorama.setPov({ heading, pitch });
+      panorama.setZoom(zoom);
+    }
+    if (onReset) onReset();
+  };
+
+  const handleFullscreen = () => {
+    if (mapRef.current) {
+      if (mapRef.current.requestFullscreen) {
+        mapRef.current.requestFullscreen();
+      }
+    }
+    if (onFullscreen) onFullscreen();
+  };
+
+  const handleClose = () => {
+    if (onClose) onClose();
+  };
 
   return (
     <div className={`relative ${className}`} style={{ width, height }}>
@@ -96,7 +131,6 @@ const StreetView: React.FC<StreetViewProps> = ({
           </div>
         </div>
       )}
-      
       {error && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
           <div className="text-center p-4">
@@ -105,7 +139,6 @@ const StreetView: React.FC<StreetViewProps> = ({
           </div>
         </div>
       )}
-      
       <div 
         ref={mapRef} 
         className="w-full h-full"
