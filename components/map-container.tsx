@@ -2,16 +2,17 @@
 
 import { useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { AlertTriangle, Navigation, Plus } from "lucide-react"
+import { AlertTriangle, Navigation, Plus, Route } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 
 interface MapContainerProps {
   selectedTrail: any
   userLocation: { lat: number; lng: number } | null
   onHazardReport: (location: { lat: number; lng: number }) => void
+  onDirectionsClick?: (trail: any) => void
 }
 
-export function MapContainer({ selectedTrail, userLocation, onHazardReport }: MapContainerProps) {
+export function MapContainer({ selectedTrail, userLocation, onHazardReport, onDirectionsClick }: MapContainerProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   // Use 'any' to avoid TypeScript errors when google.maps types are not available
   const [map, setMap] = useState<any>(null)
@@ -573,6 +574,18 @@ export function MapContainer({ selectedTrail, userLocation, onHazardReport }: Ma
           >
             <Navigation className="h-4 w-4 mr-2" />
             My Location
+          </Button>
+        )}
+
+        {selectedTrail && onDirectionsClick && (
+          <Button
+            onClick={() => onDirectionsClick(selectedTrail)}
+            variant="outline"
+            size="sm"
+            className="shadow-lg bg-white"
+          >
+            <Route className="h-4 w-4 mr-2" />
+            Get Directions
           </Button>
         )}
       </div>

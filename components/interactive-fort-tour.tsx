@@ -51,6 +51,19 @@ export default function InteractiveFortTour({
   const tourData = selectedFort ? FORT_TOURS[selectedFort.name] : null;
   const currentStep = tourData?.steps[currentStepIndex];
 
+  // Debug logging (only in development)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('InteractiveFortTour Debug:', {
+      selectedFort,
+      fortName: selectedFort?.name,
+      tourData: !!tourData,
+      currentStepIndex,
+      currentStep: !!currentStep,
+      totalSteps: tourData?.steps.length,
+      currentStepCoords: currentStep?.position
+    });
+  }
+
   // Auto-advance timer
   useEffect(() => {
     if (!isPlaying || !currentStep) return;
@@ -112,7 +125,24 @@ export default function InteractiveFortTour({
 
   const progress = tourData ? ((currentStepIndex + 1) / tourData.steps.length) * 100 : 0;
 
-  if (!selectedFort || !tourData) return null;
+  if (!selectedFort || !tourData) {
+    console.error('Tour data not found for fort:', selectedFort?.name);
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Tour Not Available</DialogTitle>
+          </DialogHeader>
+          <div className="p-6 text-center">
+            <p className="text-gray-600 mb-4">
+              Interactive tour is not available for {selectedFort?.name || 'this location'}.
+            </p>
+            <Button onClick={onClose}>Close</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -336,7 +366,7 @@ export default function InteractiveFortTour({
 
           {/* Right Panel - Street View */}
           <div className="flex-1 relative w-full">
-            {currentStep && (
+            {currentStep ? (
               <StreetView
                 latitude={currentStep.position.lat}
                 longitude={currentStep.position.lng}
@@ -344,12 +374,14 @@ export default function InteractiveFortTour({
                 pitch={currentStep.pov.pitch}
                 height="100%"
                 className="rounded-none"
-                onClose={onClose}
-                onReset={() => {
-                  setCurrentStepIndex(0);
-                  setIsPlaying(false);
-                }}
               />
+            ) : (
+              <div className="flex items-center justify-center h-full bg-gray-100">
+                <div className="text-center">
+                  <div className="text-gray-500 mb-2">📍</div>
+                  <p className="text-gray-600">Loading tour location...</p>
+                </div>
+              </div>
             )}
           </div>
         </div>

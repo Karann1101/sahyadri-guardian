@@ -13,6 +13,7 @@ import AuthForm from "@/components/auth-form"
 import Advanced3DMap from "@/components/advanced-3d-map"
 import FortStreetViewModal from "@/components/fort-street-view-modal"
 import InteractiveFortTour from "@/components/interactive-fort-tour"
+import TrekkingDirections from "@/components/trekking-directions"
 
 const TRAILS = [
   {
@@ -50,6 +51,8 @@ export default function HomePage() {
   const [selectedFortForStreetView, setSelectedFortForStreetView] = useState<any>(null)
   const [showTourModal, setShowTourModal] = useState(false)
   const [selectedFortForTour, setSelectedFortForTour] = useState<any>(null)
+  const [showDirectionsModal, setShowDirectionsModal] = useState(false)
+  const [selectedFortForDirections, setSelectedFortForDirections] = useState<any>(null)
   const { user, loading, checkAuth } = useAuth()
   const { location, error: locationError } = useGeolocation()
   const [hazards, setHazards] = useState<any[]>([])
@@ -107,6 +110,10 @@ export default function HomePage() {
                 setHazardLocation(loc)
                 setShowHazardModal(true)
               }}
+              onDirectionsClick={(trail) => {
+                setSelectedFortForDirections(trail)
+                setShowDirectionsModal(true)
+              }}
             />
           )}
 
@@ -122,6 +129,10 @@ export default function HomePage() {
               onTourClick={(trail) => {
                 setSelectedFortForTour(trail)
                 setShowTourModal(true)
+              }}
+              onDirectionsClick={(trail) => {
+                setSelectedFortForDirections(trail)
+                setShowDirectionsModal(true)
               }}
             />
           </div>
@@ -182,6 +193,22 @@ export default function HomePage() {
         }}
         selectedFort={selectedFortForTour}
       />
+
+      {/* Trekking Directions Modal */}
+      {showDirectionsModal && selectedFortForDirections && (
+        <TrekkingDirections
+          destination={{
+            lat: selectedFortForDirections.coords.lat,
+            lng: selectedFortForDirections.coords.lng,
+            name: selectedFortForDirections.name
+          }}
+          userLocation={location}
+          onClose={() => {
+            setShowDirectionsModal(false)
+            setSelectedFortForDirections(null)
+          }}
+        />
+      )}
     </div>
   )
 }

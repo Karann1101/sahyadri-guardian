@@ -1,6 +1,6 @@
 "use client"
 
-import { Mountain, TrendingUp, Eye, BookOpen } from "lucide-react"
+import { Mountain, TrendingUp, Eye, BookOpen, Navigation } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -11,9 +11,10 @@ interface TrailSelectorProps {
   onTrailSelect: (trail: any) => void
   onStreetViewClick?: (trail: any) => void
   onTourClick?: (trail: any) => void
+  onDirectionsClick?: (trail: any) => void
 }
 
-export function TrailSelector({ selectedTrail, onTrailSelect, onStreetViewClick, onTourClick }: TrailSelectorProps) {
+export function TrailSelector({ selectedTrail, onTrailSelect, onStreetViewClick, onTourClick, onDirectionsClick }: TrailSelectorProps) {
   const trails = [
     {
       id: 1,
@@ -136,8 +137,18 @@ export function TrailSelector({ selectedTrail, onTrailSelect, onStreetViewClick,
           )}
 
           {/* Action Buttons */}
-          {selectedTrail && (onStreetViewClick || onTourClick) && (
+          {selectedTrail && (onStreetViewClick || onTourClick || onDirectionsClick) && (
             <div className="pt-3 border-t border-gray-200 space-y-2">
+              {onDirectionsClick && (
+                <Button
+                  onClick={() => onDirectionsClick(selectedTrail)}
+                  className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white shadow-lg transition-all duration-200"
+                  size="sm"
+                >
+                  <Navigation className="h-4 w-4 mr-2" />
+                  Get Directions
+                </Button>
+              )}
               {onStreetViewClick && (
                 <Button
                   onClick={() => onStreetViewClick(selectedTrail)}

@@ -42,8 +42,16 @@ const StreetView: React.FC<StreetViewProps> = ({
         setIsLoading(true);
         setError(null);
 
+        const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+        if (!apiKey) {
+          console.error('Google Maps API key is missing. Please set NEXT_PUBLIC_GOOGLE_MAPS_API_KEY in your .env file.');
+          setError('Google Maps API key is missing');
+          setIsLoading(false);
+          return;
+        }
+
         const loader = new Loader({
-          apiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
+          apiKey: apiKey,
           version: 'weekly',
           libraries: ['places']
         });
@@ -78,13 +86,14 @@ const StreetView: React.FC<StreetViewProps> = ({
         // Handle panorama load events
         google.maps.event.addListener(pano, 'status_changed', () => {
           const status = pano.getStatus();
+          console.log('Street View status:', status);
           if (status === google.maps.StreetViewStatus.OK) {
             setIsLoading(false);
           } else if (status === google.maps.StreetViewStatus.ZERO_RESULTS) {
             setError('No Street View available at this location');
             setIsLoading(false);
           } else {
-            setError('Error loading Street View');
+            setError(`Error loading Street View: ${status}`);
             setIsLoading(false);
           }
         });
