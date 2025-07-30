@@ -1,19 +1,22 @@
 "use client"
 
-import { Menu, Bell, User, Shield, MapPin, LogOut } from "lucide-react"
+import { Menu, Bell, User, Shield, MapPin, LogOut, AlertTriangle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useAuth } from "@/hooks/use-auth"
+import { useEffect, useState } from "react"
 
 interface HeaderProps {
   onMenuClick: () => void
   user: any
+  hazards: any[]
 }
 
-export function Header({ onMenuClick, user }: HeaderProps) {
+export function Header({ onMenuClick, user, hazards }: HeaderProps) {
   const { signOut } = useAuth()
+  const [notifOpen, setNotifOpen] = useState(false)
 
   const handleSignOut = async () => {
     await signOut()
@@ -34,12 +37,42 @@ export function Header({ onMenuClick, user }: HeaderProps) {
         </div>
 
         <div className="flex items-center space-x-4">
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="h-5 w-5" />
-            <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs">
-              3
-            </Badge>
-          </Button>
+          <div className="relative">
+            <Button variant="ghost" size="icon" className="relative" onClick={() => setNotifOpen((v) => !v)}>
+              <Bell className="h-5 w-5" />
+              {hazards.length > 0 && (
+                <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs">
+                  {hazards.length}
+                </Badge>
+              )}
+            </Button>
+            {notifOpen && (
+              <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                <div className="p-3 border-b font-semibold text-gray-800">Hazard Notifications</div>
+                <div className="max-h-72 overflow-y-auto">
+                  {hazards.length === 0 ? (
+                    <div className="p-4 text-gray-500 text-sm">No hazards reported.</div>
+                  ) : (
+                    hazards.map((hazard) => (
+                      <div key={hazard.id} className="p-3 border-b last:border-b-0 flex items-start space-x-2">
+                        <div className="mt-1">
+                          <AlertTriangle className="h-5 w-5 text-orange-500" />
+                        </div>
+                        <div>
+                          <div className="font-medium text-sm capitalize">{hazard.type.replace(/_/g, " ")}</div>
+                          <div className="text-xs text-gray-600 mb-1">Severity: <span className={
+                            hazard.severity === "high" ? "text-red-600" : hazard.severity === "moderate" ? "text-yellow-600" : "text-green-600"
+                          }>{hazard.severity}</span></div>
+                          <div className="text-xs text-gray-700 mb-1">{hazard.description}</div>
+                          <div className="text-xs text-gray-400">{hazard.reportedAt ? new Date(hazard.reportedAt).toLocaleString() : ""}</div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
 
           {user ? (
             <DropdownMenu>

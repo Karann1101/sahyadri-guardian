@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { MapContainer } from "@/components/map-container"
 import { Sidebar } from "@/components/sidebar"
 import { Header } from "@/components/header"
@@ -52,6 +52,14 @@ export default function HomePage() {
   const [selectedFortForTour, setSelectedFortForTour] = useState<any>(null)
   const { user, loading, checkAuth } = useAuth()
   const { location, error: locationError } = useGeolocation()
+  const [hazards, setHazards] = useState<any[]>([])
+
+  useEffect(() => {
+    fetch("/api/hazards")
+      .then((res) => res.json())
+      .then((data) => setHazards(Array.isArray(data) ? data : []))
+      .catch(() => setHazards([]))
+  }, [])
 
   const handleAuthSuccess = (userData: any) => {
     // The useAuth hook will automatically update the user state
@@ -86,7 +94,7 @@ export default function HomePage() {
       />
 
       <div className="flex-1 flex flex-col">
-        <Header onMenuClick={() => setSidebarOpen(true)} user={user} />
+        <Header onMenuClick={() => setSidebarOpen(true)} user={user} hazards={hazards} />
 
         <div className="flex-1 relative">
           {selectedTrail && selectedTrail.coords ? (
@@ -130,8 +138,26 @@ export default function HomePage() {
         <HazardReportModal
           location={hazardLocation}
           onClose={() => setShowHazardModal(false)}
-          onSubmit={(report) => {
-            console.log("Hazard report:", report)
+          onSubmit={async (report) => {
+            try {
+              const res = await fetch("/api/hazards", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  lat: report.location.lat,
+                  lng: report.location.lng,
+                  type: report.type,
+                  severity: report.severity,
+                  description: report.description,
+                }),
+              })
+              if (res.ok) {
+                const newHazard = await res.json()
+                setHazards((prev) => [newHazard, ...prev])
+              }
+            } catch (e) {
+              // Optionally show error toast
+            }
             setShowHazardModal(false)
           }}
         />
