@@ -60,7 +60,7 @@ export function TrailSelector({ selectedTrail, onTrailSelect, onStreetViewClick,
   }
 
   return (
-    <Card className="w-64 shadow-xl bg-gradient-to-br from-white to-blue-50 border-0">
+    <Card className="w-64 shadow-xl bg-white border-0">
       <CardContent className="p-4">
         <div className="space-y-3">
           <div className="flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-purple-600 p-2 rounded-lg text-white">
@@ -69,26 +69,31 @@ export function TrailSelector({ selectedTrail, onTrailSelect, onStreetViewClick,
           </div>
 
           <Select
-            value={selectedTrail?.id?.toString() || ""}
-            onValueChange={(value) => {
-              const trail = trails.find((t) => t.id.toString() === value)
-              onTrailSelect(trail)
-            }}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Choose a trail" />
-            </SelectTrigger>
-            <SelectContent>
-              {trails.map((trail) => (
-                <SelectItem key={trail.id} value={trail.id.toString()}>
-                  <div className="flex items-center justify-between w-full">
-                    <span>{trail.name}</span>
-                    <Badge className={`ml-2 ${getRiskColor(trail.riskLevel)}`}>{trail.riskLevel}</Badge>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+  value={selectedTrail?.id?.toString() || "none"}
+  onValueChange={(value) => {
+    if (value === "none") {
+      onTrailSelect(null);
+    } else {
+      const trail = trails.find((t) => t.id.toString() === value);
+      onTrailSelect(trail);
+    }
+  }}
+>
+  <SelectTrigger>
+    <SelectValue placeholder="Choose a trail" />
+  </SelectTrigger>
+  <SelectContent>
+    <SelectItem value="none">None</SelectItem>
+    {trails.map((trail) => (
+      <SelectItem key={trail.id} value={trail.id.toString()}>
+        <div className="flex items-center justify-between w-full">
+          <span>{trail.name}</span>
+          <Badge className={`ml-2 ${getRiskColor(trail.riskLevel)}`}>{trail.riskLevel}</Badge>
+        </div>
+      </SelectItem>
+    ))}
+  </SelectContent>
+</Select>
 
           {selectedTrail && (
             <div className="pt-2 border-t border-gray-200 space-y-3">
