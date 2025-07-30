@@ -495,6 +495,29 @@ export function MapContainer({ selectedTrail, userLocation, onHazardReport, onDi
     }
   }, [map, userLocation, isGoogleLoaded, selectedTrail]);
 
+  useEffect(() => {
+    if (!map || !userLocation) return;
+
+    const marker = new window.google.maps.Marker({
+      position: userLocation,
+      map,
+      icon: {
+        path: window.google.maps.SymbolPath.CIRCLE,
+        scale: 8,
+        fillColor: "#4285F4",
+        fillOpacity: 1,
+        strokeWeight: 2,
+        strokeColor: "#fff",
+      },
+      title: "Your Location",
+      zIndex: 9999,
+    });
+
+    return () => {
+      marker.setMap(null);
+    };
+  }, [userLocation, map]);
+
   const getRiskColor = (level: string) => {
     switch (level) {
       case "low":
@@ -563,7 +586,7 @@ export function MapContainer({ selectedTrail, userLocation, onHazardReport, onDi
         {userLocation && (
           <Button
             onClick={() => {
-              if (map) {
+              if (map && userLocation) {
                 map.setCenter(userLocation)
                 map.setZoom(15)
               }
