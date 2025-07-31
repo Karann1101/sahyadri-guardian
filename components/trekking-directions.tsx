@@ -89,7 +89,7 @@ export default function TrekkingDirections({
     try {
       const directionsService = new window.google.maps.DirectionsService();
       
-      // Get routes for different travel modes
+      // Get routes for different travel modes with distinct options
       const travelModes = [
         { mode: window.google.maps.TravelMode.WALKING, type: 'hiking', label: 'Hiking Trail' },
         { mode: window.google.maps.TravelMode.DRIVING, type: 'driving', label: 'Drive + Hike' },
@@ -152,13 +152,25 @@ export default function TrekkingDirections({
       setRoutes(allRoutes);
       if (allRoutes.length > 0) {
         setSelectedRoute(allRoutes[0]);
-        // Display the first route on the map
-        const firstResult = await directionsService.route({
-          origin: userLocation,
-          destination: destination,
-          travelMode: window.google.maps.TravelMode.WALKING
-        });
-        directionsRenderer.setDirections(firstResult);
+        
+        // Display the first route (hiking) on the map by default
+        const firstRoute = allRoutes.find(r => r.type === 'hiking') || allRoutes[0];
+        if (firstRoute) {
+          const travelMode = firstRoute.type === 'hiking' ? 
+            window.google.maps.TravelMode.WALKING : 
+            firstRoute.type === 'biking' ? 
+              window.google.maps.TravelMode.BICYCLING : 
+              window.google.maps.TravelMode.DRIVING;
+
+          const firstResult = await directionsService.route({
+            origin: userLocation,
+            destination: destination,
+            travelMode: travelMode,
+            avoidHighways: travelMode === window.google.maps.TravelMode.WALKING || travelMode === window.google.maps.TravelMode.BICYCLING,
+            avoidTolls: travelMode === window.google.maps.TravelMode.WALKING || travelMode === window.google.maps.TravelMode.BICYCLING
+          });
+          directionsRenderer.setDirections(firstResult);
+        }
       } else {
         setError('No routes found to this destination');
       }
@@ -263,14 +275,27 @@ export default function TrekkingDirections({
           window.google.maps.TravelMode.BICYCLING : 
           window.google.maps.TravelMode.DRIVING;
 
-      directionsService.route({
+      // Clear previous route
+      directionsRenderer.setDirections({ routes: [] });
+
+      // Request new route with specific options
+      const request = {
         origin: userLocation,
         destination: destination,
         travelMode: travelMode,
-        provideRouteAlternatives: false
-      }, (result, status) => {
-        if (status === 'OK') {
-          directionsRenderer.setDirections(result);
+        provideRouteAlternatives: true,
+        avoidHighways: travelMode === window.google.maps.TravelMode.WALKING || travelMode === window.google.maps.TravelMode.BICYCLING,
+        avoidTolls: travelMode === window.google.maps.TravelMode.WALKING || travelMode === window.google.maps.TravelMode.BICYCLING
+      };
+
+      directionsService.route(request, (result, status) => {
+        if (status === 'OK' && result && result.routes && result.routes.length > 0) {
+          // Display the first route of the selected type
+          const routeToShow = {
+            routes: [result.routes[0]],
+            request: result.request
+          };
+          directionsRenderer.setDirections(routeToShow);
         } else {
           console.error('Failed to display route:', status);
         }
@@ -377,23 +402,28 @@ export default function TrekkingDirections({
                       {routes.map((route) => {
                         const TypeIcon = getTypeIcon(route.type);
                         return (
-                          <Card
-                            key={route.id}
-                            className={`cursor-pointer transition-colors ${
-                              selectedRoute?.id === route.id ? 'border-blue-500 bg-blue-50' : ''
-                            }`}
-                            onClick={() => handleRouteSelect(route)}
-                          >
+                                                     <Card
+                             key={route.id}
+                             className={`cursor-pointer transition-colors ${
+                               selectedRoute?.id === route.id ? 'border-blue-500 bg-blue-50 shadow-lg' : 'hover:bg-gray-50'
+                             }`}
+                             onClick={() => handleRouteSelect(route)}
+                           >
                             <CardContent className="p-3">
-                              <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center">
-                                  <TypeIcon className="h-4 w-4 mr-2 text-blue-600" />
-                                  <span className="text-sm font-medium">{route.name}</span>
-                                </div>
-                                <Badge className={`text-xs ${getDifficultyColor(route.difficulty)}`}>
-                                  {route.difficulty}
-                                </Badge>
-                              </div>
+                                                             <div className="flex items-center justify-between mb-2">
+                                 <div className="flex items-center">
+                                   <TypeIcon className="h-4 w-4 mr-2 text-blue-600" />
+                                   <span className="text-sm font-medium">{route.name}</span>
+                                   {selectedRoute?.id === route.id && (
+                                     <Badge className="ml-2 text-xs bg-green-100 text-green-800">
+                                       Active
+                                     </Badge>
+                                   )}
+                                 </div>
+                                 <Badge className={`text-xs ${getDifficultyColor(route.difficulty)}`}>
+                                   {route.difficulty}
+                                 </Badge>
+                               </div>
                               
                               <div className="space-y-1 text-xs text-gray-600">
                                 <div className="flex items-center justify-between">
