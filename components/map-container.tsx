@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { AlertTriangle, Navigation, Plus, Route } from "lucide-react"
+import { AlertTriangle, Navigation, Plus, Route, Box } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import InteractiveFortTour from "./interactive-fort-tour"
 
 interface MapContainerProps {
   selectedTrail: any
@@ -21,6 +22,7 @@ export function MapContainer({ selectedTrail, userLocation, onHazardReport, onDi
   const [isGoogleLoaded, setIsGoogleLoaded] = useState(false)
   const [selectedTrailInfo, setSelectedTrailInfo] = useState<any>(null)
   const [selectedTrailCentroid, setSelectedTrailCentroid] = useState<{ lat: number; lng: number } | null>(null)
+  const [showTour, setShowTour] = useState(false)
 
   // More precise polygons for each fort (from satellite/trekker maps)
   const trails = [
@@ -600,16 +602,30 @@ export function MapContainer({ selectedTrail, userLocation, onHazardReport, onDi
           </Button>
         )}
 
-        {selectedTrail && onDirectionsClick && (
-          <Button
-            onClick={() => onDirectionsClick(selectedTrail)}
-            variant="outline"
-            size="sm"
-            className="shadow-lg bg-white"
-          >
-            <Route className="h-4 w-4 mr-2" />
-            Get Directions
-          </Button>
+        {selectedTrail && (
+          <>
+            {onDirectionsClick && (
+              <Button
+                onClick={() => onDirectionsClick(selectedTrail)}
+                variant="outline"
+                size="sm"
+                className="shadow-lg bg-white"
+              >
+                <Route className="h-4 w-4 mr-2" />
+                Get Directions
+              </Button>
+            )}
+
+            <Button
+              onClick={() => setShowTour(true)}
+              variant="outline"
+              size="sm"
+              className="shadow-lg bg-white/90 hover:bg-fuchsia-50"
+            >
+              <Box className="h-4 w-4 mr-2 text-fuchsia-600" />
+              Start Interactive Tour
+            </Button>
+          </>
         )}
       </div>
 
@@ -652,6 +668,19 @@ export function MapContainer({ selectedTrail, userLocation, onHazardReport, onDi
           </Badge>
         </div>
       )}
+
+      {/* Interactive Fort Tour */}
+      <InteractiveFortTour
+        isOpen={showTour}
+        onClose={() => setShowTour(false)}
+        selectedFort={selectedTrail ? {
+          name: selectedTrail.name,
+          coords: selectedTrailCentroid || { lat: 0, lng: 0 },
+          difficulty: "Moderate",
+          elevation: "1,312 meters",
+          riskLevel: selectedTrail.riskLevel || "low"
+        } : null}
+      />
     </div>
   );
 }
