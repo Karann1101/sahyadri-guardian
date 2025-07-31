@@ -322,12 +322,12 @@ export default function TrekkingDirections({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden">
-        <div className="flex">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-xl max-w-5xl w-full h-[90vh] flex flex-col">
+        <div className="flex flex-1 min-h-0">
           {/* Map Section */}
-          <div className="flex-1 relative">
-            <div ref={mapRef} className="w-full h-[500px]" />
+          <div className="flex-1 relative min-h-0">
+            <div ref={mapRef} className="w-full h-full" />
             
             {/* Map Controls */}
             <div className="absolute top-4 left-4 space-y-2">
@@ -351,8 +351,8 @@ export default function TrekkingDirections({
           </div>
 
           {/* Directions Panel */}
-          <div className="w-96 bg-gray-50 overflow-y-auto">
-            <div className="p-4">
+          <div className="w-96 bg-gray-50 flex flex-col min-h-0">
+            <div className="p-4 flex-1 overflow-y-auto min-h-0">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold">Trekking Routes to {destination.name}</h2>
                 <Button
@@ -521,31 +521,34 @@ export default function TrekkingDirections({
                      </Button>
                    )}
 
-                   {/* Route Statistics */}
-                   {routes.length > 0 && (
-                     <Card className="mt-4">
-                       <CardHeader>
-                         <CardTitle className="text-sm">Route Statistics</CardTitle>
-                       </CardHeader>
-                       <CardContent>
-                         <div className="grid grid-cols-2 gap-4 text-xs">
-                           <div className="text-center p-2 bg-blue-50 rounded">
-                             <div className="font-semibold text-blue-700">Total Routes</div>
-                             <div className="text-2xl font-bold text-blue-600">{routes.length}</div>
-                           </div>
-                           <div className="text-center p-2 bg-green-50 rounded">
-                             <div className="font-semibold text-green-700">Available Modes</div>
-                             <div className="text-2xl font-bold text-green-600">
-                               {new Set(routes.map(r => r.type)).size}
-                             </div>
-                           </div>
-                         </div>
-                         <div className="mt-3 text-xs text-gray-600">
-                           Routes calculated using Google Maps Directions API
-                         </div>
-                       </CardContent>
-                     </Card>
-                   )}
+                                       {/* Route Statistics */}
+                    {routes.length > 0 && (
+                      <Card className="mt-4">
+                        <CardHeader>
+                          <CardTitle className="text-sm">Route Statistics</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-2 gap-4 text-xs">
+                            <div className="text-center p-2 bg-blue-50 rounded">
+                              <div className="font-semibold text-blue-700">Total Routes</div>
+                              <div className="text-2xl font-bold text-blue-600">{routes.length}</div>
+                            </div>
+                            <div className="text-center p-2 bg-green-50 rounded">
+                              <div className="font-semibold text-green-700">Available Modes</div>
+                              <div className="text-2xl font-bold text-green-600">
+                                {new Set(routes.map(r => r.type)).size}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="mt-3 text-xs text-gray-600">
+                            Routes calculated using Google Maps Directions API
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Bottom padding for better scrolling */}
+                    <div className="h-8"></div>
                 </>
               )}
             </div>
