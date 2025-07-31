@@ -93,23 +93,14 @@ export default function FortStreetViewModal({
         <div className="relative">
           {/* Street View Component */}
           <div className={isFullscreen ? 'h-[calc(100vh-120px)]' : 'h-[500px]'}>
-            {isModalReady ? (
-              <StreetView
-                latitude={currentPosition.position.lat}
-                longitude={currentPosition.position.lng}
-                heading={currentPosition.pov.heading}
-                pitch={currentPosition.pov.pitch}
-                height="100%"
-                className="rounded-b-lg"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gray-100">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                  <p className="text-gray-600">Preparing Street View...</p>
-                </div>
-              </div>
-            )}
+            <StreetView
+              latitude={currentPosition.position.lat}
+              longitude={currentPosition.position.lng}
+              heading={currentPosition.pov.heading}
+              pitch={currentPosition.pov.pitch}
+              height="100%"
+              className="rounded-b-lg"
+            />
           </div>
           {/* Control Buttons Row */}
           <div className="flex justify-end gap-3 px-6 py-4">
