@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import StreetView from './street-view';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ChevronDown } from 'lucide-react'; // Add this if you have lucide-react installed, otherwise use a text arrow
 
 interface Location {
   name: string;
@@ -47,6 +48,7 @@ const LOCATIONS: Location[] = [
 export default function StreetViewDemo() {
   const [selectedLocation, setSelectedLocation] = useState<Location>(LOCATIONS[0]);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const locationInfoRef = React.useRef<HTMLDivElement>(null);
 
   return (
     <div className="container mx-auto p-6">
@@ -119,11 +121,22 @@ export default function StreetViewDemo() {
               </div>
             </CardContent>
           </Card>
+          {/* Scroll Down Button */}
+          <div className="flex justify-center mt-4">
+            <Button
+              variant="ghost"
+              onClick={() => locationInfoRef.current?.scrollIntoView({ behavior: 'smooth' })}
+              aria-label="Scroll down to location info"
+            >
+              {/* Use icon if available, otherwise fallback to text */}
+              {typeof ChevronDown !== 'undefined' ? <ChevronDown className="w-6 h-6" /> : '↓'}
+            </Button>
+          </div>
         </div>
       </div>
 
       {/* Location Info */}
-      <div className="mt-6">
+      <div className="mt-6" ref={locationInfoRef}>
         <Card>
           <CardHeader>
             <CardTitle>Location Information</CardTitle>

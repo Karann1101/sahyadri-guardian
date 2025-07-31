@@ -290,9 +290,10 @@ export default function TrekkingDirections({
 
       directionsService.route(request, (result, status) => {
         if (status === 'OK' && result && result.routes && result.routes.length > 0) {
-          // Display the first route of the selected type
+          // Display the selected route of the selected type
+          const routeIndex = parseInt(route.id.split('-')[1], 10) || 0;
           const routeToShow = {
-            routes: [result.routes[0]],
+            routes: [result.routes[routeIndex] || result.routes[0]],
             request: result.request
           };
           directionsRenderer.setDirections(routeToShow);

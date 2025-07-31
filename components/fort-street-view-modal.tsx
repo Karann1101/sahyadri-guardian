@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Eye, Map, X, Navigation, RotateCcw } from 'lucide-react';
+import { Eye, Map, X, Navigation, RotateCcw, ChevronDown } from 'lucide-react';
 import StreetView from './street-view';
 import { STREET_VIEW_POSITIONS, type StreetViewPosition } from './street-view-positions';
 
@@ -28,6 +28,7 @@ export default function FortStreetViewModal({
 }: FortStreetViewModalProps) {
   const [currentViewIndex, setCurrentViewIndex] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const infoRef = React.useRef<HTMLDivElement>(null);
 
   if (!selectedFort) return null;
 
@@ -103,6 +104,16 @@ export default function FortStreetViewModal({
               className="rounded-b-lg"
             />
           </div>
+          {/* Scroll Down Button */}
+          <div className="flex justify-center mt-2">
+            <Button
+              variant="ghost"
+              onClick={() => infoRef.current?.scrollIntoView({ behavior: 'smooth' })}
+              aria-label="Scroll down to more info"
+            >
+              <ChevronDown className="w-6 h-6" />
+            </Button>
+          </div>
           {/* Control Buttons Row */}
           <div className="flex justify-end gap-3 px-6 py-4">
             <Button
@@ -172,32 +183,34 @@ export default function FortStreetViewModal({
         </div>
 
         {/* View Points List */}
-        {streetViewPositions.length > 1 && (
-          <div className="p-6 pt-4">
-            <h3 className="font-semibold mb-3 flex items-center gap-2">
-              <Navigation className="h-4 w-4" />
-              View Points ({streetViewPositions.length})
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-              {streetViewPositions.map((position, index) => (
-                <Button
-                  key={index}
-                  variant={currentViewIndex === index ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setCurrentViewIndex(index)}
-                  className="justify-start text-left h-auto p-2"
-                >
-                  <div>
-                    <div className="font-medium text-xs">{position.title}</div>
-                    <div className="text-xs opacity-70">
-                      Heading: {position.pov.heading}° | Pitch: {position.pov.pitch}°
+        <div ref={infoRef}>
+          {streetViewPositions.length > 1 && (
+            <div className="p-6 pt-4">
+              <h3 className="font-semibold mb-3 flex items-center gap-2">
+                <Navigation className="h-4 w-4" />
+                View Points ({streetViewPositions.length})
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                {streetViewPositions.map((position, index) => (
+                  <Button
+                    key={index}
+                    variant={currentViewIndex === index ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setCurrentViewIndex(index)}
+                    className="justify-start text-left h-auto p-2"
+                  >
+                    <div>
+                      <div className="font-medium text-xs">{position.title}</div>
+                      <div className="text-xs opacity-70">
+                        Heading: {position.pov.heading}° | Pitch: {position.pov.pitch}°
+                      </div>
                     </div>
-                  </div>
-                </Button>
-              ))}
+                  </Button>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );

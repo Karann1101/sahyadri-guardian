@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import React from "react"
 
 interface TrailSelectorProps {
   selectedTrail: any
@@ -59,6 +60,9 @@ export function TrailSelector({ selectedTrail, onTrailSelect, onStreetViewClick,
         return "bg-gray-100 text-gray-800"
     }
   }
+
+  // Add a ref to keep track of the scroll action
+  const [shouldScrollInModal, setShouldScrollInModal] = React.useState(false);
 
   return (
     <Card className="w-64 shadow-xl bg-white border-0">
@@ -151,7 +155,10 @@ export function TrailSelector({ selectedTrail, onTrailSelect, onStreetViewClick,
               )}
               {onStreetViewClick && (
                 <Button
-                  onClick={() => onStreetViewClick(selectedTrail)}
+                  onClick={() => {
+                    setShouldScrollInModal(true);
+                    onStreetViewClick(selectedTrail);
+                  }}
                   className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg transition-all duration-200"
                   size="sm"
                 >
