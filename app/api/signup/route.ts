@@ -3,17 +3,37 @@ import { connectToDB } from '@/lib/mongodb';
 import { User } from '@/models/user';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { z } from 'zod';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+// Schema for signup validation
+const signupSchema = z.object({
+  email: z.string().email({ message: 'Invalid email format' }),
+  password: z
+    .string()
+    .min(6, { message: 'Password must be at least 6 characters' }),
+  displayName: z.string().optional(),
+});
+
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error('Missing JWT_SECRET environment variable');
+}
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, password, displayName } = await req.json();
+    const body = await req.json();
 
     // Validate input
-    if (!email || !password) {
-      return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
+    const parseResult = signupSchema.safeParse(body);
+    if (!parseResult.success) {
+      const firstError = parseResult.error.errors[0];
+      return NextResponse.json(
+        { error: firstError.message, field: firstError.path[0] },
+        { status: 400 }
+      );
     }
+
+    const { email, password, displayName } = parseResult.data;
 
     await connectToDB();
 
@@ -30,27 +50,27 @@ export async function POST(req: NextRequest) {
     const newUser = new User({
       email,
       password: hashedPassword,
-      displayName: displayName || email.split('@')[0]
+      displayName: displayName || email.split('@')[0],
     });
 
     await newUser.save();
 
-    // Create JWT token
+    // Create JWT token with consistent payload
     const token = jwt.sign(
-      { userId: newUser._id, email: newUser.email },
+      { id: newUser._id.toString(), email: newUser.email },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
 
     // Set HTTP-only cookie
     const response = NextResponse.json(
-      { 
+      {
         message: 'User registered successfully',
         user: {
           id: newUser._id,
           email: newUser.email,
-          displayName: newUser.displayName
-        }
+          displayName: newUser.displayName,
+        },
       },
       { status: 201 }
     );
@@ -59,7 +79,8 @@ export async function POST(req: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 // 7 days
+      maxAge: 7 * 24 * 60 * 60, // 7 days
+      path: '/', // ensure it's sent on all routes
     });
 
     return response;

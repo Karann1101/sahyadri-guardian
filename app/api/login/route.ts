@@ -5,72 +5,74 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error('Missing JWT_SECRET environment variable');
+}
 
-// Define LoginEvent schema and model
+// Define login event schema/model (safe for serverless)
 const loginEventSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' },
   email: { type: String, required: true },
-  timestamp: { type: Date, default: Date.now }
+  timestamp: { type: Date, default: Date.now },
 });
-const LoginEvent = mongoose.models.LoginEvent || mongoose.model('LoginEvent', loginEventSchema);
+const LoginEvent =
+  mongoose.models.LoginEvent || mongoose.model('LoginEvent', loginEventSchema);
 
 export async function POST(req: NextRequest) {
   try {
     const { email, password } = await req.json();
 
-    // Validate input
+    // Basic validation
     if (!email || !password) {
-      return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Email and password are required' },
+        { status: 400 }
+      );
     }
 
     await connectToDB();
 
-    // Find user by email
     const user = await User.findOne({ email });
     if (!user) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
-    // Check if user is active
     if (!user.isActive) {
       return NextResponse.json({ error: 'Account is deactivated' }, { status: 401 });
     }
 
-    // Verify password
     const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
-    // Update last login
     user.lastLogin = new Date();
     await user.save();
 
-    // Log the sign-in event
+    // Log sign-in event (fire-and-forget is acceptable but we await to ensure persistence)
     await LoginEvent.create({
       userId: user._id,
       email: user.email,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
 
-    // Create JWT token
+    // JWT with consistent payload key
     const token = jwt.sign(
-      { userId: user._id, email: user.email },
+      { id: user._id.toString(), email: user.email },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
 
-    // Set HTTP-only cookie
     const response = NextResponse.json(
-      { 
+      {
         message: 'Login successful',
         user: {
           id: user._id,
           email: user.email,
           displayName: user.displayName,
-          role: user.role
-        }
+          role: user.role,
+        },
       },
       { status: 200 }
     );
@@ -79,12 +81,16 @@ export async function POST(req: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 // 7 days
+      maxAge: 7 * 24 * 60 * 60,
+      path: '/',
     });
 
     return response;
   } catch (err: any) {
     console.error('Login error:', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
-} 
+}
