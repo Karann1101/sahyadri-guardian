@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { useAuth } from "@/hooks/use-auth"
 import { useEffect, useState } from "react"
 
 interface HeaderProps {
@@ -15,12 +14,7 @@ interface HeaderProps {
 }
 
 export function Header({ onMenuClick, user, hazards }: HeaderProps) {
-  const { signOut } = useAuth()
   const [notifOpen, setNotifOpen] = useState(false)
-
-  const handleSignOut = async () => {
-    await signOut()
-  }
 
   return (
     <header className="bg-white border-b border-gray-200 px-4 py-3">
@@ -92,10 +86,6 @@ export function Header({ onMenuClick, user, hazards }: HeaderProps) {
                 <DropdownMenuItem>
                   <MapPin className="mr-2 h-4 w-4" />
                   My Reports
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleSignOut}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Sign out
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

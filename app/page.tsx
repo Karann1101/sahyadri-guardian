@@ -7,9 +7,7 @@ import { Header } from "@/components/header"
 import { HazardReportModal } from "@/components/hazard-report-modal"
 import { WeatherPanel } from "@/components/weather-panel"
 import { TrailSelector } from "@/components/trail-selector"
-import { useAuth } from "@/hooks/use-auth"
 import { useGeolocation } from "@/hooks/use-geolocation"
-import AuthForm from "@/components/auth-form"
 import Advanced3DMap from "@/components/advanced-3d-map"
 import FortStreetViewModal from "@/components/fort-street-view-modal"
 import TrekkingDirections from "@/components/trekking-directions"
@@ -53,7 +51,6 @@ export default function HomePage() {
   const [selectedFortForDirections, setSelectedFortForDirections] = useState<any>(null)
   const [showInteractiveTourModal, setShowInteractiveTourModal] = useState(false)
   const [selectedFortForTour, setSelectedFortForTour] = useState<any>(null)
-  const { user, loading, checkAuth } = useAuth()
   const { location, error: locationError } = useGeolocation()
   const [hazards, setHazards] = useState<any[]>([])
 
@@ -63,29 +60,6 @@ export default function HomePage() {
       .then((data) => setHazards(Array.isArray(data) ? data : []))
       .catch(() => setHazards([]))
   }, [])
-
-  const handleAuthSuccess = (userData: any) => {
-    // The useAuth hook will automatically update the user state
-    // This function is called after successful login/signup
-    checkAuth()
-  }
-
-  // Show loading spinner while checking authentication
-  if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
-      </div>
-    )
-  }
-
-  // Show AuthForm if user not logged in
-  if (!user) {
-    return <AuthForm onAuthSuccess={handleAuthSuccess} />
-  }
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -97,7 +71,7 @@ export default function HomePage() {
       />
 
       <div className="flex-1 flex flex-col">
-        <Header onMenuClick={() => setSidebarOpen(true)} user={user} hazards={hazards} />
+        <Header onMenuClick={() => setSidebarOpen(true)} user={null} hazards={hazards} />
 
         <div className="flex-1 relative">
           {selectedTrail && selectedTrail.coords ? (
