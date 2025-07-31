@@ -28,6 +28,27 @@ export default function FortStreetViewModal({
 }: FortStreetViewModalProps) {
   const [currentViewIndex, setCurrentViewIndex] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isModalReady, setIsModalReady] = useState(false);
+  const [viewMode, setViewMode] = useState<'street' | '3d'>('street');
+
+  // Handle modal ready state
+  useEffect(() => {
+    if (isOpen) {
+      const timer = setTimeout(() => {
+        setIsModalReady(true);
+      }, 500);
+      return () => {
+        clearTimeout(timer);
+        setIsModalReady(false);
+      };
+    }
+  }, [isOpen]);
+
+  const handleToggleView = () => {
+    setIsModalReady(false);
+    setViewMode(prev => prev === 'street' ? '3d' : 'street');
+    setTimeout(() => setIsModalReady(true), 100);
+  };
 
   if (!selectedFort) return null;
 
@@ -91,15 +112,29 @@ export default function FortStreetViewModal({
         </DialogHeader>
 
         <div className="relative">
+          {/* View Toggle Button */}
+          <div className="flex justify-end gap-2 px-6 pt-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleToggleView}
+              className="text-indigo-700 border-indigo-300 hover:bg-indigo-50"
+            >
+              {viewMode === 'street' ? 'Switch to 3D View' : 'Switch to Street View'}
+            </Button>
+          </div>
+
           {/* Street View Component */}
-          <div className={isFullscreen ? 'h-[calc(100vh-120px)]' : 'h-[500px]'}>
+          <div className={`${isFullscreen ? 'h-[calc(100vh-120px)]' : 'h-[500px]'} transition-opacity duration-300 ${isModalReady ? 'opacity-100' : 'opacity-0'}`}>
             <StreetView
               latitude={currentPosition.position.lat}
               longitude={currentPosition.position.lng}
-              heading={currentPosition.pov.heading}
-              pitch={currentPosition.pov.pitch}
+              heading={viewMode === '3d' ? 45 : currentPosition.pov.heading}
+              pitch={viewMode === '3d' ? 30 : currentPosition.pov.pitch}
+              zoom={1}
+              width="100%"
               height="100%"
-              className="rounded-b-lg"
+              className="w-full h-full rounded-b-lg"
             />
           </div>
           {/* Control Buttons Row */}
