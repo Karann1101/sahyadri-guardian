@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -28,6 +28,21 @@ export default function FortStreetViewModal({
 }: FortStreetViewModalProps) {
   const [currentViewIndex, setCurrentViewIndex] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isModalReady, setIsModalReady] = useState(false);
+
+  // Ensure modal is fully rendered before showing Street View
+  useEffect(() => {
+    if (isOpen) {
+      // Small delay to ensure modal is fully rendered
+      const timer = setTimeout(() => {
+        setIsModalReady(true);
+        console.log('Modal is ready for Street View');
+      }, 300);
+      return () => clearTimeout(timer);
+    } else {
+      setIsModalReady(false);
+    }
+  }, [isOpen]);
 
   if (!selectedFort) return null;
 
@@ -87,22 +102,31 @@ export default function FortStreetViewModal({
                 </Badge>
               </div>
             </div>
-            {/* Removed header buttons as requested */}
           </div>
         </DialogHeader>
 
         <div className="relative">
           {/* Street View Component */}
           <div className={isFullscreen ? 'h-[calc(100vh-120px)]' : 'h-[500px]'}>
-            <StreetView
-              latitude={currentPosition.position.lat}
-              longitude={currentPosition.position.lng}
-              heading={currentPosition.pov.heading}
-              pitch={currentPosition.pov.pitch}
-              height="100%"
-              className="rounded-b-lg"
-            />
+            {isModalReady ? (
+              <StreetView
+                latitude={currentPosition.position.lat}
+                longitude={currentPosition.position.lng}
+                heading={currentPosition.pov.heading}
+                pitch={currentPosition.pov.pitch}
+                height="100%"
+                className="rounded-b-lg"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                  <p className="text-gray-600">Preparing Street View...</p>
+                </div>
+              </div>
+            )}
           </div>
+          
           {/* Control Buttons Row */}
           <div className="flex justify-end gap-3 px-6 py-4">
             <Button
@@ -178,22 +202,24 @@ export default function FortStreetViewModal({
               <Navigation className="h-4 w-4" />
               View Points ({streetViewPositions.length})
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {streetViewPositions.map((position, index) => (
-                <Button
+                <Card 
                   key={index}
-                  variant={currentViewIndex === index ? "default" : "outline"}
-                  size="sm"
+                  className={`cursor-pointer transition-all ${
+                    index === currentViewIndex 
+                      ? 'ring-2 ring-blue-500 bg-blue-50' 
+                      : 'hover:bg-gray-50'
+                  }`}
                   onClick={() => setCurrentViewIndex(index)}
-                  className="justify-start text-left h-auto p-2"
                 >
-                  <div>
-                    <div className="font-medium text-xs">{position.title}</div>
-                    <div className="text-xs opacity-70">
-                      Heading: {position.pov.heading}° | Pitch: {position.pov.pitch}°
-                    </div>
-                  </div>
-                </Button>
+                  <CardContent className="p-3">
+                    <h4 className="font-medium text-sm">{position.title}</h4>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {position.position.lat.toFixed(4)}, {position.position.lng.toFixed(4)}
+                    </p>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           </div>

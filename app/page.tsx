@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { MapContainer } from "@/components/map-container"
+import MapContainer from "@/components/map-container.fixed"
 import { Sidebar } from "@/components/sidebar"
 import { Header } from "@/components/header"
 import { HazardReportModal } from "@/components/hazard-report-modal"
@@ -12,8 +12,8 @@ import { useGeolocation } from "@/hooks/use-geolocation"
 import AuthForm from "@/components/auth-form"
 import Advanced3DMap from "@/components/advanced-3d-map"
 import FortStreetViewModal from "@/components/fort-street-view-modal"
-import InteractiveFortTour from "@/components/interactive-fort-tour"
 import TrekkingDirections from "@/components/trekking-directions"
+import InteractiveFortTour from "@/components/interactive-fort-tour"
 
 const TRAILS = [
   {
@@ -49,10 +49,10 @@ export default function HomePage() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [showStreetViewModal, setShowStreetViewModal] = useState(false)
   const [selectedFortForStreetView, setSelectedFortForStreetView] = useState<any>(null)
-  const [showTourModal, setShowTourModal] = useState(false)
-  const [selectedFortForTour, setSelectedFortForTour] = useState<any>(null)
   const [showDirectionsModal, setShowDirectionsModal] = useState(false)
   const [selectedFortForDirections, setSelectedFortForDirections] = useState<any>(null)
+  const [showInteractiveTourModal, setShowInteractiveTourModal] = useState(false)
+  const [selectedFortForTour, setSelectedFortForTour] = useState<any>(null)
   const { user, loading, checkAuth } = useAuth()
   const { location, error: locationError } = useGeolocation()
   const [hazards, setHazards] = useState<any[]>([])
@@ -126,13 +126,13 @@ export default function HomePage() {
                 setSelectedFortForStreetView(trail)
                 setShowStreetViewModal(true)
               }}
-              onTourClick={(trail) => {
-                setSelectedFortForTour(trail)
-                setShowTourModal(true)
-              }}
               onDirectionsClick={(trail) => {
                 setSelectedFortForDirections(trail)
                 setShowDirectionsModal(true)
+              }}
+              onInteractiveTourClick={(trail) => {
+                setSelectedFortForTour(trail)
+                setShowInteractiveTourModal(true)
               }}
             />
           </div>
@@ -186,12 +186,18 @@ export default function HomePage() {
 
       {/* Interactive Tour Modal */}
       <InteractiveFortTour
-        isOpen={showTourModal}
+        isOpen={showInteractiveTourModal}
         onClose={() => {
-          setShowTourModal(false)
+          setShowInteractiveTourModal(false)
           setSelectedFortForTour(null)
         }}
-        selectedFort={selectedFortForTour}
+        selectedFort={selectedFortForTour ? {
+          name: selectedFortForTour.name,
+          coords: selectedFortForTour.coords,
+          difficulty: selectedFortForTour.difficulty || "Moderate",
+          elevation: selectedFortForTour.elevation || "1,312 meters",
+          riskLevel: selectedFortForTour.riskLevel || "low"
+        } : null}
       />
 
       {/* Trekking Directions Modal */}

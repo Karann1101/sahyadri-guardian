@@ -1,6 +1,6 @@
 "use client"
 
-import { Mountain, TrendingUp, Eye, BookOpen, Navigation } from "lucide-react"
+import { Mountain, TrendingUp, Eye, BookOpen, Navigation, Camera } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -10,11 +10,11 @@ interface TrailSelectorProps {
   selectedTrail: any
   onTrailSelect: (trail: any) => void
   onStreetViewClick?: (trail: any) => void
-  onTourClick?: (trail: any) => void
   onDirectionsClick?: (trail: any) => void
+  onInteractiveTourClick?: (trail: any) => void
 }
 
-export function TrailSelector({ selectedTrail, onTrailSelect, onStreetViewClick, onTourClick, onDirectionsClick }: TrailSelectorProps) {
+export function TrailSelector({ selectedTrail, onTrailSelect, onStreetViewClick, onDirectionsClick, onInteractiveTourClick }: TrailSelectorProps) {
   const trails = [
     {
       id: 1,
@@ -137,7 +137,7 @@ export function TrailSelector({ selectedTrail, onTrailSelect, onStreetViewClick,
           )}
 
           {/* Action Buttons */}
-          {selectedTrail && (onStreetViewClick || onTourClick || onDirectionsClick) && (
+          {selectedTrail && (onStreetViewClick || onDirectionsClick || onInteractiveTourClick) && (
             <div className="pt-3 border-t border-gray-200 space-y-2">
               {onDirectionsClick && (
                 <Button
@@ -159,13 +159,13 @@ export function TrailSelector({ selectedTrail, onTrailSelect, onStreetViewClick,
                   View Street View
                 </Button>
               )}
-              {onTourClick && (
+              {onInteractiveTourClick && (
                 <Button
-                  onClick={() => onTourClick(selectedTrail)}
-                  className="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white shadow-lg transition-all duration-200"
+                  onClick={() => onInteractiveTourClick(selectedTrail)}
+                  className="w-full bg-gradient-to-r from-fuchsia-500 to-fuchsia-600 hover:from-fuchsia-600 hover:to-fuchsia-700 text-white shadow-lg transition-all duration-200"
                   size="sm"
                 >
-                  <BookOpen className="h-4 w-4 mr-2" />
+                  <Camera className="h-4 w-4 mr-2" />
                   Start Interactive Tour
                 </Button>
               )}
